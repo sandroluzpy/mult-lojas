@@ -3,13 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistema PDV Pro Multi-Lojas</title>
+  <title>Sistema PDV Pro Multi-Lojas com Licenciamento</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Phosphor Icons CDN -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- AVISO DE LICENÇA EXPIRADA / SUSPENSA (BLOQUEIO TOTAL DO PDV) -->
+  <div id="licenseBlockedOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-2xl text-center border border-rose-200">
+      <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="ph ph-warning-octagon text-3xl"></i>
+      </div>
+      <h3 class="text-xl font-bold text-slate-900">Acesso Suspenso</h3>
+      <p id="licenseBlockedReason" class="text-sm text-slate-600 mt-2 mb-4 leading-relaxed">
+        A licença desta loja expirou ou foi temporariamente bloqueada pela administração central.
+      </p>
+      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs font-mono text-slate-600 mb-5 break-all text-left">
+        <div><strong>Loja:</strong> <span id="licenseBlockedStoreName">---</span></div>
+        <div><strong>Chave:</strong> <span id="licenseBlockedKey">---</span></div>
+      </div>
+      <div class="flex flex-col gap-2">
+        <button onclick="requestMasterAccessDirectly()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-sm transition">
+          Sou o Administrador (Liberar Acesso)
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- BARRA DE NAVEGAÇÃO PRINCIPAL -->
   <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
@@ -20,25 +42,28 @@
           <img id="shopLogoImg" src="" alt="Logo" class="hidden w-full h-full object-cover">
         </div>
         <div>
-          <h1 id="shopNameDisplay" class="font-bold text-lg leading-tight">Nome da Loja</h1>
+          <div class="flex items-center gap-2">
+            <h1 id="shopNameDisplay" class="font-bold text-lg leading-tight">Nome da Loja</h1>
+            <span id="shopLicenseBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Licença Ativa</span>
+          </div>
           <span id="shopSegmentDisplay" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-indigo-300 border border-slate-700 font-medium">Segmento</span>
         </div>
       </div>
 
       <nav class="flex items-center gap-2">
         <button onclick="switchView('pdv')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 transition">
-          <i class="ph ph-cash-register text-lg"></i> Frente de Caixa
+          <i class="ph ph-cash-register text-lg"></i> Caixa
         </button>
         <button onclick="switchView('produtos')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
           <i class="ph ph-package text-lg"></i> Produtos
         </button>
         <button onclick="switchView('historico')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
-          <i class="ph ph-receipt text-lg"></i> Vendas & Caixa
+          <i class="ph ph-receipt text-lg"></i> Histórico
         </button>
         <button onclick="switchView('config')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
           <i class="ph ph-gear text-lg"></i> Minha Loja
         </button>
-        <button onclick="switchView('master')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 transition">
+        <button onclick="handleMasterButtonClick()" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 transition">
           <i class="ph ph-crown text-lg"></i> Master ADM
         </button>
       </nav>
@@ -51,9 +76,8 @@
     <!-- VIEW: FRENTE DE CAIXA (PDV) -->
     <section id="view-pdv" class="view-panel grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- Lado Esquerdo: Busca rápida e catálogo -->
+      <!-- Esquerda: Busca e Catálogo -->
       <div class="lg:col-span-7 flex flex-col gap-4">
-        <!-- Barra de busca rápida com suporte a leitor de código de barras -->
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
           <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Busca de Produtos / Leitor de Código de Barras (Enter)</label>
           <div class="relative">
@@ -61,26 +85,23 @@
             <input 
               id="barcodeSearchInput" 
               type="text" 
-              placeholder="Digite o nome ou bipe o código de barras..." 
+              placeholder="Digite o nome ou bipe o código..." 
               class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 text-sm"
               autofocus
             />
           </div>
         </div>
 
-        <!-- Grade de Produtos Rápidos -->
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col">
           <div class="flex justify-between items-center mb-3">
             <h2 class="font-bold text-slate-700">Catálogo Rápido</h2>
             <span id="productCounterBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">0 itens</span>
           </div>
-          <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-1">
-            <!-- Itens inseridos via JavaScript -->
-          </div>
+          <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
         </div>
       </div>
 
-      <!-- Lado Direito: Carrinho e Checkout -->
+      <!-- Direita: Carrinho e Totais -->
       <div class="lg:col-span-5 flex flex-col gap-4">
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
           
@@ -91,19 +112,14 @@
             <button onclick="clearCart()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold">Limpar Venda</button>
           </div>
 
-          <!-- Lista do Carrinho -->
-          <div id="cartItemsList" class="flex-1 p-4 overflow-y-auto max-h-[340px] space-y-3">
-            <!-- Vazio por padrão -->
-          </div>
+          <div id="cartItemsList" class="flex-1 p-4 overflow-y-auto max-h-[340px] space-y-3"></div>
 
-          <!-- Totais & Resumo Financeiro -->
           <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
             <div class="flex justify-between text-sm text-slate-600">
               <span>Subtotal:</span>
               <span id="subtotalDisplay" class="font-semibold text-slate-800">R$ 0,00</span>
             </div>
 
-            <!-- Desconto -->
             <div class="flex items-center gap-2">
               <label class="text-xs font-semibold text-slate-600 whitespace-nowrap">Desconto:</label>
               <div class="flex gap-1 flex-1">
@@ -131,7 +147,7 @@
 
     </section>
 
-    <!-- VIEW: GESTÃO DE PRODUTOS -->
+    <!-- VIEW: PRODUTOS -->
     <section id="view-produtos" class="view-panel hidden space-y-6">
       <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -159,7 +175,7 @@
       </div>
 
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+        <div class="p-4 border-b border-slate-100">
           <h3 class="font-bold text-slate-800">Estoque Cadastrado</h3>
         </div>
         <div class="overflow-x-auto">
@@ -172,23 +188,19 @@
                 <th class="p-3 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody id="productsTableBody">
-              <!-- Renderizado via JS -->
-            </tbody>
+            <tbody id="productsTableBody"></tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- VIEW: HISTÓRICO, CANCELAMENTO E FECHAMENTO DE CAIXA -->
+    <!-- VIEW: HISTÓRICO & FECHAMENTO -->
     <section id="view-historico" class="view-panel hidden space-y-6">
-      
-      <!-- Resumo do Caixa Aberto -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <span class="text-xs text-slate-500 font-semibold uppercase">Total Faturado</span>
           <p id="boxTotalSales" class="text-2xl font-black text-indigo-600 mt-1">R$ 0,00</p>
-          <span id="boxCountSales" class="text-xs text-slate-400">0 vendas concluídas</span>
+          <span id="boxCountSales" class="text-xs text-slate-400">0 vendas</span>
         </div>
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <span class="text-xs text-slate-500 font-semibold uppercase">Dinheiro</span>
@@ -199,7 +211,7 @@
           <p id="boxPixSales" class="text-xl font-bold text-slate-700 mt-1">R$ 0,00</p>
         </div>
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase">Cartões (Déb./Créd.)</span>
+          <span class="text-xs text-slate-500 font-semibold uppercase">Cartões</span>
           <p id="boxCardSales" class="text-xl font-bold text-slate-700 mt-1">R$ 0,00</p>
         </div>
       </div>
@@ -216,29 +228,27 @@
           <table class="w-full text-left text-sm text-slate-600">
             <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
               <tr>
-                <th class="p-3">ID Venda</th>
-                <th class="p-3">Data / Hora</th>
+                <th class="p-3">ID</th>
+                <th class="p-3">Data/Hora</th>
                 <th class="p-3">Itens</th>
-                <th class="p-3">Forma Pagto</th>
-                <th class="p-3">Total Líquido</th>
+                <th class="p-3">Forma</th>
+                <th class="p-3">Total</th>
                 <th class="p-3">Status</th>
                 <th class="p-3 text-right">Ação</th>
               </tr>
             </thead>
-            <tbody id="salesTableBody">
-              <!-- Renderizado via JS -->
-            </tbody>
+            <tbody id="salesTableBody"></tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- VIEW: CONFIGURAÇÃO DA LOJA -->
-    <section id="view-config" class="view-panel hidden max-w-2xl mx-auto">
+    <!-- VIEW: MINHA LOJA (CONFIGURAÇÃO) -->
+    <section id="view-config" class="view-panel hidden max-w-2xl mx-auto space-y-6">
       <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
         <div>
-          <h2 class="text-lg font-bold text-slate-800">Configuração & Personalização da Loja</h2>
-          <p class="text-xs text-slate-500">Personalize a identidade da loja ativa no momento.</p>
+          <h2 class="text-lg font-bold text-slate-800">Personalização da Loja</h2>
+          <p class="text-xs text-slate-500">Altere nome, segmento e logotipo.</p>
         </div>
 
         <form id="storeSettingsForm" onsubmit="saveStoreSettings(event)" class="space-y-4">
@@ -259,7 +269,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">URL do Logotipo / Imagem (Opcional)</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">URL da Imagem / Logo</label>
             <input id="settingStoreLogo" type="url" placeholder="https://exemplo.com/logo.png" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
           </div>
 
@@ -268,41 +278,75 @@
           </div>
         </form>
       </div>
+
+      <!-- Informações da Licença Atual (Visualização da Loja) -->
+      <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 text-sm space-y-2">
+        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+          <i class="ph ph-key text-indigo-600"></i> Informações da Licença Desta Loja
+        </h3>
+        <p class="text-xs text-slate-500">Para renovação ou troca de chave, entre em contato com o suporte central.</p>
+        <div class="pt-2 grid grid-cols-2 gap-4 text-xs">
+          <div>
+            <span class="text-slate-400 block font-semibold uppercase">Chave de Licença:</span>
+            <span id="currentLicenseKeyText" class="font-mono font-bold text-slate-700">----</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block font-semibold uppercase">Válida Até:</span>
+            <span id="currentLicenseExpiryText" class="font-bold text-slate-700">--/--/----</span>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- VIEW: PAINEL MASTER ADM -->
+    <!-- VIEW: PAINEL MASTER ADM GERAL (PROTEGIDO POR SENHA) -->
     <section id="view-master" class="view-panel hidden space-y-6">
       <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <span class="text-xs uppercase tracking-widest text-amber-400 font-bold">Acesso Administrativo Central</span>
-          <h2 class="text-2xl font-black mt-1">Painel Master ADM</h2>
-          <p class="text-xs text-slate-300 mt-1">Gerencie múltiplos lojistas e acompanhe o volume de vendas consolidado.</p>
+          <div class="flex items-center gap-2">
+            <span class="text-xs uppercase tracking-widest text-amber-400 font-bold">Painel Master ADM</span>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">Sessão Autenticada</span>
+          </div>
+          <h2 class="text-2xl font-black mt-1">Gestão Central & Licenciamento</h2>
+          <p class="text-xs text-slate-300 mt-1">Gerencie todas as lojas conveniadas, ative chaves de licença e bloqueie acessos.</p>
         </div>
-        <button onclick="openNewStoreModal()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-sm flex items-center gap-2 transition">
-          <i class="ph ph-plus-circle text-lg"></i> Criar Nova Loja
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="changeMasterPasswordPrompt()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1 border border-slate-700">
+            <i class="ph ph-lock text-sm"></i> Trocar Senha Master
+          </button>
+          <button onclick="openNewStoreModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-sm flex items-center gap-2 transition">
+            <i class="ph ph-plus-circle text-lg"></i> Criar Loja com Licença
+          </button>
+          <button onclick="lockMasterPanel()" class="px-3 py-2 bg-rose-600/30 text-rose-300 hover:bg-rose-600/40 rounded-lg text-xs font-bold border border-rose-500/30">
+            Sair
+          </button>
+        </div>
       </div>
 
-      <!-- Resumo Geral da Rede de Lojas -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Resumo Global -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs uppercase font-semibold text-slate-500">Lojas Ativas</span>
+          <span class="text-xs uppercase font-semibold text-slate-500">Lojas Totais</span>
           <p id="masterStoreCount" class="text-3xl font-black text-slate-800 mt-1">0</p>
         </div>
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs uppercase font-semibold text-slate-500">Total Transacionado Global</span>
-          <p id="masterGlobalVolume" class="text-3xl font-black text-emerald-600 mt-1">R$ 0,00</p>
+          <span class="text-xs uppercase font-semibold text-slate-500">Lojas Ativas</span>
+          <p id="masterActiveLicenseCount" class="text-3xl font-black text-emerald-600 mt-1">0</p>
         </div>
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs uppercase font-semibold text-slate-500">Total de Pedidos</span>
-          <p id="masterTotalSalesCount" class="text-3xl font-black text-indigo-600 mt-1">0</p>
+          <span class="text-xs uppercase font-semibold text-slate-500">Faturamento Global</span>
+          <p id="masterGlobalVolume" class="text-3xl font-black text-indigo-600 mt-1">R$ 0,00</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs uppercase font-semibold text-slate-500">Vendas Totais</span>
+          <p id="masterTotalSalesCount" class="text-3xl font-black text-slate-700 mt-1">0</p>
         </div>
       </div>
 
-      <!-- Tabela de Lojas Cadastradas -->
+      <!-- Tabela Master de Lojas & Licenças -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100">
-          <h3 class="font-bold text-slate-800">Lojas Gerenciadas</h3>
+        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+          <h3 class="font-bold text-slate-800">Controle de Lojas e Licenciamento</h3>
+          <span class="text-xs text-slate-400">Você pode prorrogar ou revogar a licença de qualquer lojista aqui.</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm text-slate-600">
@@ -310,20 +354,95 @@
               <tr>
                 <th class="p-3">Loja</th>
                 <th class="p-3">Segmento</th>
-                <th class="p-3">Produtos</th>
-                <th class="p-3">Total Vendas</th>
-                <th class="p-3 text-right">Ação</th>
+                <th class="p-3">Chave de Licença</th>
+                <th class="p-3">Validade</th>
+                <th class="p-3">Status Licença</th>
+                <th class="p-3">Faturamento</th>
+                <th class="p-3 text-right">Ações Master</th>
               </tr>
             </thead>
-            <tbody id="masterStoreTableBody">
-              <!-- Renderizado via JS -->
-            </tbody>
+            <tbody id="masterStoreTableBody"></tbody>
           </table>
         </div>
       </div>
     </section>
 
   </main>
+
+  <!-- MODAL: LOGIN MASTER COM SENHA -->
+  <div id="masterAuthModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 border border-slate-100 text-center animate-in fade-in zoom-in duration-150">
+      <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
+        <i class="ph ph-shield-check text-2xl font-bold"></i>
+      </div>
+      <h3 class="text-lg font-bold text-slate-900">Acesso Restrito ao Master</h3>
+      <p class="text-xs text-slate-500 mt-1 mb-4">Digite sua senha de administrador master para gerenciar licenças e lojas.</p>
+      
+      <form onsubmit="handleMasterLogin(event)" class="space-y-4">
+        <div>
+          <input 
+            id="masterPasswordInput" 
+            type="password" 
+            required 
+            placeholder="Digite a senha..." 
+            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-center text-base focus:ring-2 focus:ring-amber-500 outline-none font-bold"
+          />
+          <span class="text-[11px] text-slate-400 mt-1 block">Senha padrão inicial: <span class="font-mono font-bold text-slate-600">admin123</span></span>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeMasterAuthModal()" class="flex-1 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Cancelar</button>
+          <button type="submit" class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-sm transition">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: GERENCIAR LICENÇA DE UMA LOJA -->
+  <div id="licenseModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 border border-slate-100 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+          <i class="ph ph-key text-amber-500 text-xl"></i> Gerenciar Licença do Lojista
+        </h3>
+        <button onclick="closeLicenseModal()" class="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
+      </div>
+
+      <form id="licenseManageForm" onsubmit="saveLicenseChanges(event)" class="space-y-3">
+        <input type="hidden" id="licenseTargetStoreId">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Loja</label>
+          <input id="licenseStoreNameInput" type="text" disabled class="w-full px-3 py-2 bg-slate-100 border rounded-lg text-sm font-bold text-slate-700">
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-xs font-semibold text-slate-600">Chave de Licença (Licença Serial)</label>
+            <button type="button" onclick="generateNewRandomKeyToInput()" class="text-[11px] text-indigo-600 hover:underline font-semibold">Gerar Nova</button>
+          </div>
+          <input id="licenseKeyInput" type="text" required class="w-full px-3 py-2 border rounded-lg font-mono text-sm uppercase font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Expiração / Validade</label>
+          <input id="licenseExpiryInput" type="date" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Status da Licença</label>
+          <select id="licenseStatusInput" class="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+            <option value="ativa">Ativa (Acesso Liberado)</option>
+            <option value="bloqueada">Bloqueada / Suspensa</option>
+          </select>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeLicenseModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+          <button type="submit" class="px-5 py-2 text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg">Atualizar Licença</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- MODAL: FINALIZAR VENDA (PAGAMENTO E TROCO) -->
   <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -337,7 +456,6 @@
       </div>
 
       <div class="p-5 space-y-4">
-        
         <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex justify-between items-center">
           <span class="text-sm font-semibold text-indigo-900">Total a Pagar:</span>
           <span id="modalPayableTotal" class="text-2xl font-black text-indigo-700">R$ 0,00</span>
@@ -361,10 +479,9 @@
           </div>
         </div>
 
-        <!-- Painel Específico: Dinheiro (Cálculo de Troco) -->
         <div id="cashPanel" class="hidden space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Recebido em Dinheiro (R$)</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Recebido (R$)</label>
             <input id="cashReceivedInput" type="number" step="0.5" placeholder="0,00" oninput="calculateChange()" class="w-full px-3 py-2 border rounded-lg text-base font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
           </div>
           <div class="flex justify-between items-center pt-1 text-sm">
@@ -373,41 +490,67 @@
           </div>
         </div>
 
-        <!-- Painel Específico: PIX Mock -->
         <div id="pixPanel" class="hidden text-center p-3 bg-teal-50 rounded-xl border border-teal-200">
           <i class="ph ph-check-circle text-3xl text-teal-600"></i>
-          <p class="text-xs text-teal-800 font-medium mt-1">Aproxime o QR Code ou confirme o recebimento do PIX no comprovante.</p>
+          <p class="text-xs text-teal-800 font-medium mt-1">Aproxime o QR Code ou confirme o comprovante do cliente.</p>
         </div>
 
         <button onclick="confirmSale()" id="confirmSaleBtn" disabled class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-md transition">
           Confirmar e Concluir Venda
         </button>
-
       </div>
 
     </div>
   </div>
 
-  <!-- JAVASCRIPT: LÓGICA E DADOS -->
+  <!-- JAVASCRIPT: LÓGICA DE LICENCIAMENTO, SEGURANÇA E PDV -->
   <script>
-    // --- ESTRUTURA INICIAL & BANCO DE DADOS LOCAL ---
+    // --- GERADOR DE CHAVE DE LICENÇA (XXXX-XXXX-XXXX-XXXX) ---
+    function generateLicenseKey() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let key = '';
+      for (let block = 0; block < 4; block++) {
+        let part = '';
+        for (let i = 0; i < 4; i++) {
+          part += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        key += (block === 0 ? '' : '-') + part;
+      }
+      return key;
+    }
+
+    // Calcula data futura em YYYY-MM-DD
+    function getDefaultExpiryDate(days = 30) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().split('T')[0];
+    }
+
+    // --- BANCO DE DADOS LOCAL E PERSISTÊNCIA ---
+    const DEFAULT_MASTER_PASSWORD = "admin123";
+    let masterPassword = localStorage.getItem('app_master_pwd') || DEFAULT_MASTER_PASSWORD;
+    let isMasterAuthenticated = false; // Sessão master em memória
+
     const DEFAULT_STORES = [
       {
         id: "store_1",
         name: "Boutique Elegance",
         segment: "Moda",
         logo: "",
+        license: {
+          key: generateLicenseKey(),
+          expiryDate: getDefaultExpiryDate(60),
+          status: "ativa" // 'ativa' | 'bloqueada'
+        },
         products: [
           { id: "p1", name: "Camiseta Oversized Algodão", barcode: "7891001", price: 79.90 },
           { id: "p2", name: "Calça Jeans Slim", barcode: "7891002", price: 159.00 },
-          { id: "p3", name: "Vestido Midi Floral", barcode: "7891003", price: 189.90 },
-          { id: "p4", name: "Jaqueta Couro Ecológico", barcode: "7891004", price: 289.00 }
+          { id: "p3", name: "Vestido Midi Floral", barcode: "7891003", price: 189.90 }
         ],
         sales: []
       }
     ];
 
-    // Carregar estado persistido
     let stores = JSON.parse(localStorage.getItem('app_stores')) || DEFAULT_STORES;
     let currentStoreId = localStorage.getItem('app_current_store') || stores[0].id;
     let cart = [];
@@ -417,18 +560,58 @@
     function saveState() {
       localStorage.setItem('app_stores', JSON.stringify(stores));
       localStorage.setItem('app_current_store', currentStoreId);
+      localStorage.setItem('app_master_pwd', masterPassword);
     }
 
     function getCurrentStore() {
       return stores.find(s => s.id === currentStoreId) || stores[0];
     }
 
-    // --- FORMATAÇÃO MONETÁRIA ---
     function formatBRL(val) {
       return (Number(val) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // --- RENDERIZAÇÃO DA IDENTIDADE VISUAL ---
+    // --- VALIDAÇÃO DA LICENÇA ---
+    function checkLicenseStatus(store) {
+      if (!store.license) {
+        return { valid: false, reason: "Loja sem licença configurada." };
+      }
+      if (store.license.status === "bloqueada") {
+        return { valid: false, reason: "A licença desta loja foi suspensa ou desativada pelo Master ADM." };
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      if (store.license.expiryDate && store.license.expiryDate < today) {
+        return { valid: false, reason: `Licença expirou no dia ${store.license.expiryDate}. Faça a renovação com o administrador.` };
+      }
+
+      return { valid: true, reason: "" };
+    }
+
+    function enforceLicense() {
+      const store = getCurrentStore();
+      const status = checkLicenseStatus(store);
+      const overlay = document.getElementById('licenseBlockedOverlay');
+      const badge = document.getElementById('shopLicenseBadge');
+
+      if (!status.valid) {
+        document.getElementById('licenseBlockedReason').innerText = status.reason;
+        document.getElementById('licenseBlockedStoreName').innerText = store.name;
+        document.getElementById('licenseBlockedKey').innerText = store.license?.key || 'N/A';
+        overlay.classList.remove('hidden');
+
+        badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30";
+        badge.innerText = "Licença Inválida";
+        return false;
+      } else {
+        overlay.classList.add('hidden');
+        badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        badge.innerText = "Licença Ativa";
+        return true;
+      }
+    }
+
+    // --- CABEÇALHO DA LOJA ---
     function renderStoreHeader() {
       const store = getCurrentStore();
       document.getElementById('shopNameDisplay').innerText = store.name;
@@ -445,9 +628,214 @@
         img.classList.add('hidden');
         fallback.classList.remove('hidden');
       }
+
+      enforceLicense();
     }
 
-    // --- RENDER DO CATÁLOGO DE PRODUTOS NO PDV ---
+    // --- AUTENTICAÇÃO MASTER ADM ---
+    function handleMasterButtonClick() {
+      if (isMasterAuthenticated) {
+        switchView('master');
+      } else {
+        document.getElementById('masterPasswordInput').value = '';
+        document.getElementById('masterAuthModal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('masterPasswordInput').focus(), 100);
+      }
+    }
+
+    function closeMasterAuthModal() {
+      document.getElementById('masterAuthModal').classList.add('hidden');
+    }
+
+    function handleMasterLogin(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('masterPasswordInput').value;
+      if (pwd === masterPassword) {
+        isMasterAuthenticated = true;
+        closeMasterAuthModal();
+        switchView('master');
+      } else {
+        alert("Senha Master incorreta! Tente novamente.");
+        document.getElementById('masterPasswordInput').value = '';
+      }
+    }
+
+    function lockMasterPanel() {
+      isMasterAuthenticated = false;
+      switchView('pdv');
+    }
+
+    function requestMasterAccessDirectly() {
+      document.getElementById('licenseBlockedOverlay').classList.add('hidden');
+      handleMasterButtonClick();
+    }
+
+    function changeMasterPasswordPrompt() {
+      const oldPwd = prompt("Digite a senha Master atual:");
+      if (oldPwd !== masterPassword) {
+        alert("Senha atual incorreta.");
+        return;
+      }
+      const newPwd = prompt("Digite a NOVA senha Master:");
+      if (!newPwd || newPwd.trim().length < 4) {
+        alert("A senha deve ter pelo menos 4 caracteres.");
+        return;
+      }
+      masterPassword = newPwd.trim();
+      saveState();
+      alert("Senha Master alterada com sucesso!");
+    }
+
+    // --- GERENCIAMENTO DE LICENÇAS NO MASTER ---
+    function openLicenseModal(storeId) {
+      const store = stores.find(s => s.id === storeId);
+      if (!store) return;
+
+      document.getElementById('licenseTargetStoreId').value = store.id;
+      document.getElementById('licenseStoreNameInput').value = store.name;
+      document.getElementById('licenseKeyInput').value = store.license?.key || generateLicenseKey();
+      document.getElementById('licenseExpiryInput').value = store.license?.expiryDate || getDefaultExpiryDate(30);
+      document.getElementById('licenseStatusInput').value = store.license?.status || "ativa";
+
+      document.getElementById('licenseModal').classList.remove('hidden');
+    }
+
+    function closeLicenseModal() {
+      document.getElementById('licenseModal').classList.add('hidden');
+    }
+
+    function generateNewRandomKeyToInput() {
+      document.getElementById('licenseKeyInput').value = generateLicenseKey();
+    }
+
+    function saveLicenseChanges(e) {
+      e.preventDefault();
+      const storeId = document.getElementById('licenseTargetStoreId').value;
+      const store = stores.find(s => s.id === storeId);
+      if (!store) return;
+
+      store.license = {
+        key: document.getElementById('licenseKeyInput').value.trim(),
+        expiryDate: document.getElementById('licenseExpiryInput').value,
+        status: document.getElementById('licenseStatusInput').value
+      };
+
+      saveState();
+      closeLicenseModal();
+      renderMasterDashboard();
+      renderStoreHeader();
+      alert(`Licença da loja "${store.name}" atualizada com sucesso!`);
+    }
+
+    function toggleStoreStatusQuick(storeId) {
+      const store = stores.find(s => s.id === storeId);
+      if (!store) return;
+
+      if (!store.license) {
+        store.license = { key: generateLicenseKey(), expiryDate: getDefaultExpiryDate(30), status: "ativa" };
+      } else {
+        store.license.status = store.license.status === "ativa" ? "bloqueada" : "ativa";
+      }
+
+      saveState();
+      renderMasterDashboard();
+      renderStoreHeader();
+    }
+
+    // --- PAINEL MASTER ADM GERAL ---
+    function renderMasterDashboard() {
+      document.getElementById('masterStoreCount').innerText = stores.length;
+
+      let globalVolume = 0;
+      let totalSalesCount = 0;
+      let activeCount = 0;
+
+      const tbody = document.getElementById('masterStoreTableBody');
+      tbody.innerHTML = '';
+
+      stores.forEach(s => {
+        const storeTotal = s.sales.filter(v => v.status === 'Concluída').reduce((acc, v) => acc + v.total, 0);
+        globalVolume += storeTotal;
+        totalSalesCount += s.sales.filter(v => v.status === 'Concluída').length;
+
+        const licStatus = checkLicenseStatus(s);
+        if (licStatus.valid) activeCount++;
+
+        const isCurrent = s.id === currentStoreId;
+
+        const tr = document.createElement('tr');
+        tr.className = "border-b hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3">
+            <span class="font-bold text-slate-800">${s.name}</span>
+            ${isCurrent ? '<span class="ml-2 text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-bold">Ativa no PDV</span>' : ''}
+          </td>
+          <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${s.segment}</span></td>
+          <td class="p-3 font-mono text-xs font-semibold text-slate-700">${s.license?.key || 'Sem chave'}</td>
+          <td class="p-3 text-xs font-semibold ${!licStatus.valid ? 'text-rose-600' : 'text-slate-700'}">${s.license?.expiryDate || 'N/A'}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${licStatus.valid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              ${licStatus.valid ? 'Ativa' : 'Bloqueada/Vencida'}
+            </span>
+          </td>
+          <td class="p-3 font-bold text-slate-900">${formatBRL(storeTotal)}</td>
+          <td class="p-3 text-right space-x-1">
+            <button onclick="openLicenseModal('${s.id}')" title="Configurar Licença" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 rounded text-xs font-semibold border border-amber-400/30">
+              <i class="ph ph-key"></i> Licença
+            </button>
+            <button onclick="toggleStoreStatusQuick('${s.id}')" title="Alternar Bloqueio" class="px-2.5 py-1 ${s.license?.status === 'bloqueada' ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-rose-100 hover:bg-rose-200 text-rose-700'} rounded text-xs font-semibold">
+              ${s.license?.status === 'bloqueada' ? 'Desbloquear' : 'Suspender'}
+            </button>
+            ${!isCurrent ? 
+              `<button onclick="switchToStore('${s.id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold">Acessar</button>` : 
+              `<span class="text-xs text-slate-400">Em operação</span>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('masterActiveLicenseCount').innerText = activeCount;
+      document.getElementById('masterGlobalVolume').innerText = formatBRL(globalVolume);
+      document.getElementById('masterTotalSalesCount').innerText = totalSalesCount;
+    }
+
+    function switchToStore(storeId) {
+      currentStoreId = storeId;
+      saveState();
+      initApp();
+      switchView('pdv');
+    }
+
+    function openNewStoreModal() {
+      const name = prompt("Nome da nova loja:");
+      if (!name) return;
+      const segment = prompt("Segmento (Moda, Calçados, Cosméticos, Variedades ou Comércio Geral):", "Comércio Geral");
+      const days = parseInt(prompt("Quantos dias de validade da licença inicial?", "30")) || 30;
+
+      const newStore = {
+        id: "store_" + Date.now(),
+        name: name.trim(),
+        segment: segment || "Comércio Geral",
+        logo: "",
+        license: {
+          key: generateLicenseKey(),
+          expiryDate: getDefaultExpiryDate(days),
+          status: "ativa"
+        },
+        products: [],
+        sales: []
+      };
+
+      stores.push(newStore);
+      currentStoreId = newStore.id;
+      saveState();
+      initApp();
+      renderMasterDashboard();
+      alert(`Loja "${name}" criada com sucesso!\nChave: ${newStore.license.key}\nValidade: ${newStore.license.expiryDate}`);
+    }
+
+    // --- CATÁLOGO & FRENTE DE CAIXA (PDV) ---
     function renderPdvProducts(filter = '') {
       const store = getCurrentStore();
       const grid = document.getElementById('productGrid');
@@ -485,8 +873,8 @@
       });
     }
 
-    // --- LÓGICA DO CARRINHO (FRENTE DE CAIXA) ---
     function addToCart(product) {
+      if (!enforceLicense()) return;
       const existing = cart.find(item => item.product.id === product.id);
       if (existing) {
         existing.qty += 1;
@@ -499,9 +887,7 @@
     function changeCartQty(index, delta) {
       if (!cart[index]) return;
       cart[index].qty += delta;
-      if (cart[index].qty <= 0) {
-        cart.splice(index, 1);
-      }
+      if (cart[index].qty <= 0) cart.splice(index, 1);
       renderCart();
     }
 
@@ -582,11 +968,8 @@
       document.getElementById('totalDisplay').innerText = formatBRL(totals.total);
     }
 
-    // --- SUPORTE A LEITOR DE CÓDIGO DE BARRAS / BUSCA ---
     const searchInput = document.getElementById('barcodeSearchInput');
-    searchInput.addEventListener('input', (e) => {
-      renderPdvProducts(e.target.value);
-    });
+    searchInput.addEventListener('input', (e) => renderPdvProducts(e.target.value));
 
     searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -594,14 +977,12 @@
         if (!query) return;
 
         const store = getCurrentStore();
-        // Procura código de barras exato
         const exactMatch = store.products.find(p => p.barcode === query);
         if (exactMatch) {
           addToCart(exactMatch);
           searchInput.value = '';
           renderPdvProducts();
         } else {
-          // Se for uma busca comum, pega o primeiro retornado
           const matches = store.products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
           if (matches.length > 0) {
             addToCart(matches[0]);
@@ -612,13 +993,13 @@
       }
     });
 
-    // --- MODAL DE PAGAMENTO & TROCO ---
+    // --- CHECKOUT & MODAL DE PAGAMENTO ---
     function openPaymentModal() {
-      if (cart.length === 0) return;
+      if (!enforceLicense() || cart.length === 0) return;
       const { total } = calculateCartTotals();
       document.getElementById('modalPayableTotal').innerText = formatBRL(total);
       document.getElementById('paymentModal').classList.remove('hidden');
-      selectPaymentMethod('pix'); // Padrão
+      selectPaymentMethod('pix');
     }
 
     function closePaymentModal() {
@@ -672,7 +1053,7 @@
     }
 
     function confirmSale() {
-      if (!selectedPayment || cart.length === 0) return;
+      if (!enforceLicense() || !selectedPayment || cart.length === 0) return;
       const store = getCurrentStore();
       const totals = calculateCartTotals();
 
@@ -696,7 +1077,7 @@
       renderSalesHistory();
     }
 
-    // --- HISTÓRICO DE VENDAS & FECHAMENTO DE CAIXA ---
+    // --- HISTÓRICO & FECHAMENTO DE CAIXA ---
     function renderSalesHistory() {
       const store = getCurrentStore();
       const tbody = document.getElementById('salesTableBody');
@@ -751,7 +1132,7 @@
     }
 
     function cancelSale(saleId) {
-      if (!confirm(`Deseja realmente cancelar a venda ${saleId}? O valor será deduzido do caixa.`)) return;
+      if (!confirm(`Deseja cancelar a venda ${saleId}? O valor será deduzido do caixa.`)) return;
       const store = getCurrentStore();
       const sale = store.sales.find(s => s.id === saleId);
       if (sale) {
@@ -769,18 +1150,18 @@
         `RELATÓRIO DE FECHAMENTO DE CAIXA:\n` +
         `Loja: ${store.name}\n` +
         `Total Vendas Ativas: ${formatBRL(total)}\n\n` +
-        `Deseja fechar o caixa e arquivar as transações deste turno?`
+        `Deseja fechar o caixa e arquivar este turno?`
       );
 
       if (confirmClose) {
         store.sales = [];
         saveState();
         renderSalesHistory();
-        alert("Caixa fechado com sucesso. Pronto para a próxima abertura!");
+        alert("Caixa fechado com sucesso!");
       }
     }
 
-    // --- CADASTRO E GESTÃO DE PRODUTOS ---
+    // --- GESTÃO DE PRODUTOS ---
     function renderProductsTable() {
       const store = getCurrentStore();
       const tbody = document.getElementById('productsTableBody');
@@ -818,12 +1199,7 @@
           prod.price = price;
         }
       } else {
-        store.products.push({
-          id: "prod_" + Date.now(),
-          name,
-          barcode,
-          price
-        });
+        store.products.push({ id: "prod_" + Date.now(), name, barcode, price });
       }
 
       saveState();
@@ -845,7 +1221,7 @@
     }
 
     function deleteProduct(id) {
-      if (!confirm("Remover este produto do catálogo?")) return;
+      if (!confirm("Remover este produto do estoque?")) return;
       const store = getCurrentStore();
       store.products = store.products.filter(p => p.id !== id);
       saveState();
@@ -864,6 +1240,9 @@
       document.getElementById('settingStoreName').value = store.name;
       document.getElementById('settingStoreSegment').value = store.segment;
       document.getElementById('settingStoreLogo').value = store.logo || '';
+      
+      document.getElementById('currentLicenseKeyText').innerText = store.license?.key || 'Não gerada';
+      document.getElementById('currentLicenseExpiryText').innerText = store.license?.expiryDate || 'N/A';
     }
 
     function saveStoreSettings(e) {
@@ -878,82 +1257,11 @@
       alert("Configurações da loja atualizadas com sucesso!");
     }
 
-    // --- PAINEL MASTER ADM GERAL ---
-    function renderMasterDashboard() {
-      document.getElementById('masterStoreCount').innerText = stores.length;
-
-      let globalVolume = 0;
-      let totalSalesCount = 0;
-
-      const tbody = document.getElementById('masterStoreTableBody');
-      tbody.innerHTML = '';
-
-      stores.forEach(s => {
-        const storeTotal = s.sales.filter(v => v.status === 'Concluída').reduce((acc, v) => acc + v.total, 0);
-        globalVolume += storeTotal;
-        totalSalesCount += s.sales.filter(v => v.status === 'Concluída').length;
-
-        const isCurrent = s.id === currentStoreId;
-
-        const tr = document.createElement('tr');
-        tr.className = "border-b hover:bg-slate-50";
-        tr.innerHTML = `
-          <td class="p-3">
-            <span class="font-bold text-slate-800">${s.name}</span>
-            ${isCurrent ? '<span class="ml-2 text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">Ativa</span>' : ''}
-          </td>
-          <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${s.segment}</span></td>
-          <td class="p-3 text-xs font-semibold">${s.products.length} itens</td>
-          <td class="p-3 font-bold text-emerald-600">${formatBRL(storeTotal)}</td>
-          <td class="p-3 text-right">
-            ${!isCurrent ? 
-              `<button onclick="switchToStore('${s.id}')" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold">Acessar Loja</button>` : 
-              `<span class="text-xs text-slate-400">Em operação</span>`
-            }
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('masterGlobalVolume').innerText = formatBRL(globalVolume);
-      document.getElementById('masterTotalSalesCount').innerText = totalSalesCount;
-    }
-
-    function switchToStore(storeId) {
-      currentStoreId = storeId;
-      saveState();
-      initApp();
-      switchView('pdv');
-    }
-
-    function openNewStoreModal() {
-      const name = prompt("Nome da nova loja:");
-      if (!name) return;
-      const segment = prompt("Segmento (Moda, Calçados, Cosméticos, Variedades ou Comércio Geral):", "Comércio Geral");
-
-      const newStore = {
-        id: "store_" + Date.now(),
-        name: name.trim(),
-        segment: segment || "Comércio Geral",
-        logo: "",
-        products: [],
-        sales: []
-      };
-
-      stores.push(newStore);
-      currentStoreId = newStore.id;
-      saveState();
-      initApp();
-      renderMasterDashboard();
-      alert(`Loja "${name}" criada com sucesso!`);
-    }
-
-    // --- CONTROLE DE TELAS (ROTEAMENTO INTERNO) ---
+    // --- NAVEGAÇÃO DE TELAS ---
     function switchView(viewName) {
       document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
       document.getElementById(`view-${viewName}`).classList.remove('hidden');
 
-      // Atualiza botões
       document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('bg-indigo-600', 'text-white');
         if (!btn.classList.contains('bg-amber-500/20')) {
@@ -975,7 +1283,7 @@
       }
     }
 
-    // Atalhos de teclado comuns em PDV
+    // Atalhos
     window.addEventListener('keydown', (e) => {
       if (e.key === 'F2') {
         e.preventDefault();
@@ -983,11 +1291,25 @@
       }
       if (e.key === 'Escape') {
         closePaymentModal();
+        closeMasterAuthModal();
+        closeLicenseModal();
       }
     });
 
-    // --- INICIALIZAÇÃO GERAL ---
+    // --- INICIALIZAÇÃO ---
     function initApp() {
+      // Garante licença para lojas antigas migradas
+      stores.forEach(s => {
+        if (!s.license) {
+          s.license = {
+            key: generateLicenseKey(),
+            expiryDate: getDefaultExpiryDate(30),
+            status: "ativa"
+          };
+        }
+      });
+      saveState();
+
       renderStoreHeader();
       renderPdvProducts();
       renderCart();
