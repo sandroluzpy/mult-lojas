@@ -2,23 +2,37 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistema PDV Pro Multi-Lojas com Licenciamento</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Sistema PDV Pro Multi-Lojas Mobile & Desktop</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Phosphor Icons CDN -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* Suporte a áreas seguras (notches de iPhones e Androids modernos) */
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom, 1rem);
+    }
+    /* Esconde barra de rolagem mantendo a navegação limpa */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col pb-20 md:pb-6">
 
   <!-- AVISO DE LICENÇA EXPIRADA / SUSPENSA (BLOQUEIO TOTAL DO PDV) -->
   <div id="licenseBlockedOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-2xl text-center border border-rose-200">
-      <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3">
         <i class="ph ph-warning-octagon text-3xl"></i>
       </div>
       <h3 class="text-xl font-bold text-slate-900">Acesso Suspenso</h3>
-      <p id="licenseBlockedReason" class="text-sm text-slate-600 mt-2 mb-4 leading-relaxed">
+      <p id="licenseBlockedReason" class="text-xs sm:text-sm text-slate-600 mt-2 mb-4 leading-relaxed">
         A licença desta loja expirou ou foi temporariamente bloqueada pela administração central.
       </p>
       <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs font-mono text-slate-600 mb-5 break-all text-left">
@@ -26,165 +40,209 @@
         <div><strong>Chave:</strong> <span id="licenseBlockedKey">---</span></div>
       </div>
       <div class="flex flex-col gap-2">
-        <button onclick="requestMasterAccessDirectly()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-sm transition">
+        <button onclick="requestMasterAccessDirectly()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-sm transition shadow-sm">
           Sou o Administrador (Liberar Acesso)
         </button>
       </div>
     </div>
   </div>
 
-  <!-- BARRA DE NAVEGAÇÃO PRINCIPAL -->
+  <!-- BARRA SUPERIOR (DESKTOP E CABEÇALHO MOBILE) -->
   <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div id="shopLogoContainer" class="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center overflow-hidden border border-slate-700">
-          <i id="shopLogoFallback" class="ph ph-storefront text-2xl text-white"></i>
+    <div class="max-w-7xl mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+      <!-- Identificação da Loja -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div id="shopLogoContainer" class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-indigo-600 flex items-center justify-center overflow-hidden border border-slate-700 shrink-0">
+          <i id="shopLogoFallback" class="ph ph-storefront text-xl sm:text-2xl text-white"></i>
           <img id="shopLogoImg" src="" alt="Logo" class="hidden w-full h-full object-cover">
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 id="shopNameDisplay" class="font-bold text-lg leading-tight">Nome da Loja</h1>
-            <span id="shopLicenseBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Licença Ativa</span>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <h1 id="shopNameDisplay" class="font-bold text-sm sm:text-base leading-tight truncate max-w-[130px] sm:max-w-[200px]">Loja</h1>
+            <span id="shopLicenseBadge" class="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">Ativa</span>
           </div>
-          <span id="shopSegmentDisplay" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-indigo-300 border border-slate-700 font-medium">Segmento</span>
+          <span id="shopSegmentDisplay" class="text-[10px] sm:text-xs text-indigo-300 font-medium truncate block">Segmento</span>
         </div>
       </div>
 
-      <nav class="flex items-center gap-2">
-        <button onclick="switchView('pdv')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 transition">
+      <!-- Navegação Visível Apenas no Desktop / Telas Médias -->
+      <nav class="hidden md:flex items-center gap-1.5">
+        <button onclick="switchView('pdv')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 transition" data-view="pdv">
           <i class="ph ph-cash-register text-lg"></i> Caixa
         </button>
-        <button onclick="switchView('produtos')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
+        <button onclick="switchView('produtos')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="produtos">
           <i class="ph ph-package text-lg"></i> Produtos
         </button>
-        <button onclick="switchView('historico')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
-          <i class="ph ph-receipt text-lg"></i> Histórico & Caixa
+        <button onclick="switchView('historico')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="historico">
+          <i class="ph ph-receipt text-lg"></i> Caixa & Histórico
         </button>
-        <button onclick="switchView('config')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
+        <button onclick="switchView('config')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="config">
           <i class="ph ph-gear text-lg"></i> Minha Loja
         </button>
-        <button onclick="handleMasterButtonClick()" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 transition">
+        <button onclick="handleMasterButtonClick()" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 transition" data-view="master">
           <i class="ph ph-crown text-lg"></i> Master ADM
         </button>
       </nav>
+
+      <!-- Botão Master ADM Rápido no Mobile -->
+      <div class="md:hidden flex items-center">
+        <button onclick="handleMasterButtonClick()" class="p-2 bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/30 text-xs font-bold flex items-center gap-1">
+          <i class="ph ph-crown text-base"></i> Master
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- CONTEÚDO PRINCIPAL -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4">
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4">
 
     <!-- VIEW: FRENTE DE CAIXA (PDV) -->
-    <section id="view-pdv" class="view-panel grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <section id="view-pdv" class="view-panel space-y-4">
       
-      <!-- Esquerda: Busca e Catálogo -->
-      <div class="lg:col-span-7 flex flex-col gap-4">
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-          <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Busca de Produtos / Leitor de Código de Barras (Enter)</label>
-          <div class="relative">
-            <i class="ph ph-barcode text-2xl absolute left-3 top-2.5 text-slate-400"></i>
-            <input 
-              id="barcodeSearchInput" 
-              type="text" 
-              placeholder="Digite o nome ou bipe o código..." 
-              class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 text-sm"
-              autofocus
-            />
-          </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col">
-          <div class="flex justify-between items-center mb-3">
-            <h2 class="font-bold text-slate-700">Catálogo Rápido</h2>
-            <span id="productCounterBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">0 itens</span>
-          </div>
-          <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
-        </div>
+      <!-- Alternador de Abas Mobile (Catálogo vs Carrinho) -->
+      <div class="flex lg:hidden bg-white p-1 rounded-xl shadow-sm border border-slate-200">
+        <button id="mobileTabCatalogBtn" onclick="switchMobilePdvTab('catalog')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white flex items-center justify-center gap-1.5 transition">
+          <i class="ph ph-grid-four text-base"></i> Catálogo
+        </button>
+        <button id="mobileTabCartBtn" onclick="switchMobilePdvTab('cart')" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-1.5 transition relative">
+          <i class="ph ph-shopping-cart text-base"></i> Carrinho
+          <span id="mobileCartBadge" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+        </button>
       </div>
 
-      <!-- Direita: Carrinho e Totais -->
-      <div class="lg:col-span-5 flex flex-col gap-4">
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
-          
-          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-            <h3 class="font-bold text-slate-800 flex items-center gap-2">
-              <i class="ph ph-shopping-cart text-xl text-indigo-600"></i> Itens da Venda
-            </h3>
-            <button onclick="clearCart()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold">Limpar Venda</button>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        <!-- Coluna Esquerda: Busca e Catálogo -->
+        <div id="pdvCatalogColumn" class="lg:col-span-7 flex flex-col gap-3">
+          <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200">
+            <label class="block text-[11px] sm:text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Busca / Leitor de Código de Barras (Enter)</label>
+            <div class="relative">
+              <i class="ph ph-barcode text-xl sm:text-2xl absolute left-3 top-2.5 sm:top-2 text-slate-400"></i>
+              <input 
+                id="barcodeSearchInput" 
+                type="text" 
+                inputmode="search"
+                placeholder="Nome ou bipe o código..." 
+                class="w-full pl-10 sm:pl-11 pr-4 py-2 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 text-sm"
+              />
+            </div>
           </div>
 
-          <div id="cartItemsList" class="flex-1 p-4 overflow-y-auto max-h-[340px] space-y-3"></div>
+          <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+              <h2 class="font-bold text-sm sm:text-base text-slate-700">Catálogo de Produtos</h2>
+              <span id="productCounterBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">0 itens</span>
+            </div>
+            <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
+          </div>
+        </div>
 
-          <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
-            <div class="flex justify-between text-sm text-slate-600">
-              <span>Subtotal:</span>
-              <span id="subtotalDisplay" class="font-semibold text-slate-800">R$ 0,00</span>
+        <!-- Coluna Direita: Carrinho e Checkout -->
+        <div id="pdvCartColumn" class="hidden lg:flex lg:col-span-5 flex-col gap-3">
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+            
+            <div class="p-3 sm:p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 class="font-bold text-sm sm:text-base text-slate-800 flex items-center gap-2">
+                <i class="ph ph-shopping-cart text-lg text-indigo-600"></i> Itens no Caixa
+              </h3>
+              <button onclick="clearCart()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold p-1">Limpar</button>
             </div>
 
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-semibold text-slate-600 whitespace-nowrap">Desconto:</label>
-              <div class="flex gap-1 flex-1">
-                <input id="discountValue" type="number" min="0" step="0.5" placeholder="0" class="w-full px-2 py-1 border border-slate-300 rounded text-sm text-right focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                <select id="discountType" class="px-2 py-1 border border-slate-300 rounded text-xs bg-white">
-                  <option value="fixed">R$</option>
-                  <option value="percent">%</option>
-                </select>
-                <button onclick="applyDiscount()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-xs font-bold rounded">OK</button>
+            <div id="cartItemsList" class="flex-1 p-3 sm:p-4 overflow-y-auto max-h-[300px] sm:max-h-[340px] space-y-2.5"></div>
+
+            <div class="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 space-y-2.5">
+              <div class="flex justify-between text-xs sm:text-sm text-slate-600">
+                <span>Subtotal:</span>
+                <span id="subtotalDisplay" class="font-semibold text-slate-800">R$ 0,00</span>
               </div>
+
+              <!-- Desconto -->
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-semibold text-slate-600 whitespace-nowrap">Desconto:</label>
+                <div class="flex gap-1 flex-1">
+                  <input id="discountValue" type="number" min="0" step="0.5" placeholder="0" class="w-full px-2 py-1 border border-slate-300 rounded text-xs sm:text-sm text-right focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                  <select id="discountType" class="px-1.5 py-1 border border-slate-300 rounded text-xs bg-white">
+                    <option value="fixed">R$</option>
+                    <option value="percent">%</option>
+                  </select>
+                  <button onclick="applyDiscount()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-xs font-bold rounded">OK</button>
+                </div>
+              </div>
+
+              <div class="flex justify-between text-lg sm:text-xl font-black text-slate-900 border-t border-slate-200 pt-2">
+                <span>TOTAL:</span>
+                <span id="totalDisplay" class="text-indigo-600">R$ 0,00</span>
+              </div>
+
+              <button onclick="openPaymentModal()" id="finishSaleBtn" disabled class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm sm:text-base">
+                <i class="ph ph-check-circle text-xl"></i> Finalizar Venda (F2)
+              </button>
             </div>
 
-            <div class="flex justify-between text-xl font-black text-slate-900 border-t border-slate-200 pt-2">
-              <span>TOTAL:</span>
-              <span id="totalDisplay" class="text-indigo-600">R$ 0,00</span>
-            </div>
-
-            <button onclick="openPaymentModal()" id="finishSaleBtn" disabled class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-base">
-              <i class="ph ph-check-circle text-xl"></i> Finalizar Venda (F2)
-            </button>
           </div>
+        </div>
 
+      </div>
+
+      <!-- Barra Flutuante Mobile (Aparece quando há itens no carrinho e o usuário está vendo o catálogo) -->
+      <div id="mobileCartFloatingBar" class="lg:hidden fixed bottom-16 left-3 right-3 z-30 hidden">
+        <div class="bg-slate-900 text-white p-3 rounded-2xl shadow-xl flex items-center justify-between border border-slate-700">
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <i class="ph ph-shopping-bag text-2xl text-emerald-400"></i>
+              <span id="floatingCartCount" class="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block leading-tight">Total acumulado</span>
+              <span id="floatingCartTotal" class="text-sm font-bold text-white leading-tight">R$ 0,00</span>
+            </div>
+          </div>
+          <button onclick="switchMobilePdvTab('cart')" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1 shadow">
+            Ver Caixa <i class="ph ph-arrow-right font-bold"></i>
+          </button>
         </div>
       </div>
 
     </section>
 
     <!-- VIEW: PRODUTOS -->
-    <section id="view-produtos" class="view-panel hidden space-y-6">
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+    <section id="view-produtos" class="view-panel hidden space-y-4">
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h2 class="text-base sm:text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
           <i class="ph ph-plus-circle text-indigo-600 text-xl"></i> Cadastrar / Atualizar Produto
         </h2>
-        <form id="productForm" onsubmit="handleProductSubmit(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form id="productForm" onsubmit="handleProductSubmit(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <input type="hidden" id="prodEditId">
-          <div class="md:col-span-2">
+          <div class="sm:col-span-2">
             <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Produto</label>
             <input id="prodName" type="text" required placeholder="Ex: Camiseta Básica Algodão" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Código de Barras / SKU</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Código / Barras</label>
             <input id="prodBarcode" type="text" required placeholder="Ex: 789123456789" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Preço de Venda (R$)</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Preço Venda (R$)</label>
             <input id="prodPrice" type="number" step="0.01" min="0.01" required placeholder="0,00" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
           </div>
-          <div class="md:col-span-4 flex justify-end gap-2">
-            <button type="button" onclick="resetProductForm()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-5 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg">Salvar Produto</button>
+          <div class="sm:col-span-2 md:col-span-4 flex justify-end gap-2 pt-1">
+            <button type="button" onclick="resetProductForm()" class="px-4 py-2 text-xs sm:text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+            <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg">Salvar Produto</button>
           </div>
         </form>
       </div>
 
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100">
-          <h3 class="font-bold text-slate-800">Estoque Cadastrado</h3>
+        <div class="p-3 sm:p-4 border-b border-slate-100">
+          <h3 class="font-bold text-sm sm:text-base text-slate-800">Catálogo de Itens Cadastrados</h3>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+        <div class="overflow-x-auto no-scrollbar">
+          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[500px]">
+            <thead class="bg-slate-50 border-b text-[10px] sm:text-xs uppercase text-slate-500">
               <tr>
                 <th class="p-3">Código</th>
                 <th class="p-3">Produto</th>
-                <th class="p-3">Preço Unitário</th>
+                <th class="p-3">Preço</th>
                 <th class="p-3 text-right">Ações</th>
               </tr>
             </thead>
@@ -194,58 +252,58 @@
       </div>
     </section>
 
-    <!-- VIEW: HISTÓRICO & FECHAMENTO COM CARDS INDIVIDUAIS DE DÉBITO E CRÉDITO -->
-    <section id="view-historico" class="view-panel hidden space-y-6">
+    <!-- VIEW: HISTÓRICO & FECHAMENTO -->
+    <section id="view-historico" class="view-panel hidden space-y-4">
       
-      <!-- Resumo Financeiro por Modalidade -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase">Total Geral</span>
-          <p id="boxTotalSales" class="text-2xl font-black text-indigo-600 mt-1">R$ 0,00</p>
-          <span id="boxCountSales" class="text-xs text-slate-400">0 vendas</span>
+      <!-- Cards Responsivos de Métricas -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
+        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm col-span-2 sm:col-span-1">
+          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase">Total Geral</span>
+          <p id="boxTotalSales" class="text-lg sm:text-2xl font-black text-indigo-600 mt-0.5">R$ 0,00</p>
+          <span id="boxCountSales" class="text-[10px] text-slate-400 block">0 vendas</span>
         </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
+        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
             <i class="ph ph-money text-emerald-600"></i> Dinheiro
           </span>
-          <p id="boxCashSales" class="text-xl font-bold text-slate-800 mt-1">R$ 0,00</p>
+          <p id="boxCashSales" class="text-base sm:text-xl font-bold text-slate-800 mt-0.5">R$ 0,00</p>
         </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
+        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
             <i class="ph ph-qr-code text-teal-600"></i> PIX
           </span>
-          <p id="boxPixSales" class="text-xl font-bold text-slate-800 mt-1">R$ 0,00</p>
+          <p id="boxPixSales" class="text-base sm:text-xl font-bold text-slate-800 mt-0.5">R$ 0,00</p>
         </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
-            <i class="ph ph-credit-card text-blue-600"></i> Cartão Débito
+        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
+            <i class="ph ph-credit-card text-blue-600"></i> Débito
           </span>
-          <p id="boxDebitSales" class="text-xl font-bold text-slate-800 mt-1">R$ 0,00</p>
+          <p id="boxDebitSales" class="text-base sm:text-xl font-bold text-slate-800 mt-0.5">R$ 0,00</p>
         </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
-            <i class="ph ph-credit-card text-purple-600"></i> Cartão Crédito
+        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
+            <i class="ph ph-credit-card text-purple-600"></i> Crédito
           </span>
-          <p id="boxCreditSales" class="text-xl font-bold text-slate-800 mt-1">R$ 0,00</p>
+          <p id="boxCreditSales" class="text-base sm:text-xl font-bold text-slate-800 mt-0.5">R$ 0,00</p>
         </div>
       </div>
 
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg font-bold text-slate-800">Histórico de Transações</h2>
-        <button onclick="closeRegisterModal()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm">
-          <i class="ph ph-lock-key text-lg"></i> Fechar Caixa
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <h2 class="text-base sm:text-lg font-bold text-slate-800">Histórico de Transações</h2>
+        <button onclick="closeRegisterModal()" class="w-full sm:w-auto px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm">
+          <i class="ph ph-lock-key text-base"></i> Fechar Caixa
         </button>
       </div>
 
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+        <div class="overflow-x-auto no-scrollbar">
+          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[620px]">
+            <thead class="bg-slate-50 border-b text-[10px] sm:text-xs uppercase text-slate-500">
               <tr>
                 <th class="p-3">ID</th>
                 <th class="p-3">Data/Hora</th>
                 <th class="p-3">Itens</th>
-                <th class="p-3">Forma de Pagamento</th>
+                <th class="p-3">Pagamento</th>
                 <th class="p-3">Total</th>
                 <th class="p-3">Status</th>
                 <th class="p-3 text-right">Ação</th>
@@ -258,14 +316,14 @@
     </section>
 
     <!-- VIEW: MINHA LOJA (CONFIGURAÇÃO) -->
-    <section id="view-config" class="view-panel hidden max-w-2xl mx-auto space-y-6">
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+    <section id="view-config" class="view-panel hidden max-w-2xl mx-auto space-y-4">
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
         <div>
-          <h2 class="text-lg font-bold text-slate-800">Personalização da Loja</h2>
-          <p class="text-xs text-slate-500">Altere nome, segmento e logotipo.</p>
+          <h2 class="text-base sm:text-lg font-bold text-slate-800">Personalização da Loja</h2>
+          <p class="text-xs text-slate-500">Altere nome, segmento e imagem de exibição.</p>
         </div>
 
-        <form id="storeSettingsForm" onsubmit="saveStoreSettings(event)" class="space-y-4">
+        <form id="storeSettingsForm" onsubmit="saveStoreSettings(event)" class="space-y-3 sm:space-y-4">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Nome Fantasia da Loja</label>
             <input id="settingStoreName" type="text" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -287,22 +345,21 @@
             <input id="settingStoreLogo" type="url" placeholder="https://exemplo.com/logo.png" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
           </div>
 
-          <div class="flex justify-end pt-3">
-            <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold">Salvar Configurações</button>
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs sm:text-sm font-semibold">Salvar Configurações</button>
           </div>
         </form>
       </div>
 
-      <!-- Informações da Licença Atual -->
-      <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 text-sm space-y-2">
+      <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 text-sm space-y-2">
         <h3 class="font-bold text-slate-800 flex items-center gap-2">
           <i class="ph ph-key text-indigo-600"></i> Informações da Licença Desta Loja
         </h3>
-        <p class="text-xs text-slate-500">Para renovação ou troca de chave, entre em contato com o suporte central.</p>
-        <div class="pt-2 grid grid-cols-2 gap-4 text-xs">
+        <p class="text-xs text-slate-500">Chave exclusiva registrada para operação neste dispositivo.</p>
+        <div class="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div>
             <span class="text-slate-400 block font-semibold uppercase">Chave de Licença:</span>
-            <span id="currentLicenseKeyText" class="font-mono font-bold text-slate-700">----</span>
+            <span id="currentLicenseKeyText" class="font-mono font-bold text-slate-700 break-all">----</span>
           </div>
           <div>
             <span class="text-slate-400 block font-semibold uppercase">Válida Até:</span>
@@ -313,22 +370,22 @@
     </section>
 
     <!-- VIEW: PAINEL MASTER ADM (PROTEGIDO POR SENHA) -->
-    <section id="view-master" class="view-panel hidden space-y-6">
-      <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <section id="view-master" class="view-panel hidden space-y-4">
+      <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 sm:p-6 rounded-2xl text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div class="flex items-center gap-2">
             <span class="text-xs uppercase tracking-widest text-amber-400 font-bold">Painel Master ADM</span>
-            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">Sessão Autenticada</span>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">Autenticado</span>
           </div>
-          <h2 class="text-2xl font-black mt-1">Gestão Central & Licenciamento</h2>
-          <p class="text-xs text-slate-300 mt-1">Controle chaves de acesso, faturamento e validade de cada loja cliente.</p>
+          <h2 class="text-xl sm:text-2xl font-black mt-1">Gestão Central & Licenciamento</h2>
+          <p class="text-xs text-slate-300 mt-0.5">Controle global de lojistas, chaves e faturamento.</p>
         </div>
-        <div class="flex items-center gap-2">
-          <button onclick="changeMasterPasswordPrompt()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1 border border-slate-700">
-            <i class="ph ph-lock text-sm"></i> Trocar Senha Master
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <button onclick="changeMasterPasswordPrompt()" class="flex-1 sm:flex-none px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 border border-slate-700">
+            <i class="ph ph-lock"></i> Senha
           </button>
-          <button onclick="openNewStoreModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-sm flex items-center gap-2 transition">
-            <i class="ph ph-plus-circle text-lg"></i> Criar Loja com Licença
+          <button onclick="openNewStoreModal()" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs sm:text-sm flex items-center justify-center gap-1 transition shadow">
+            <i class="ph ph-plus-circle text-base"></i> Nova Loja
           </button>
           <button onclick="lockMasterPanel()" class="px-3 py-2 bg-rose-600/30 text-rose-300 hover:bg-rose-600/40 rounded-lg text-xs font-bold border border-rose-500/30">
             Sair
@@ -336,42 +393,42 @@
         </div>
       </div>
 
-      <!-- Resumo Global Master -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs uppercase font-semibold text-slate-500">Lojas Totais</span>
-          <p id="masterStoreCount" class="text-3xl font-black text-slate-800 mt-1">0</p>
+      <!-- Métricas Gerais Master -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-[10px] sm:text-xs uppercase font-semibold text-slate-500">Lojas Totais</span>
+          <p id="masterStoreCount" class="text-xl sm:text-3xl font-black text-slate-800 mt-0.5">0</p>
         </div>
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs uppercase font-semibold text-slate-500">Lojas Ativas</span>
-          <p id="masterActiveLicenseCount" class="text-3xl font-black text-emerald-600 mt-1">0</p>
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-[10px] sm:text-xs uppercase font-semibold text-slate-500">Lojas Ativas</span>
+          <p id="masterActiveLicenseCount" class="text-xl sm:text-3xl font-black text-emerald-600 mt-0.5">0</p>
         </div>
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs uppercase font-semibold text-slate-500">Faturamento Global</span>
-          <p id="masterGlobalVolume" class="text-3xl font-black text-indigo-600 mt-1">R$ 0,00</p>
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl border border-slate-200 shadow-sm col-span-2 sm:col-span-1">
+          <span class="text-[10px] sm:text-xs uppercase font-semibold text-slate-500">Volume Global</span>
+          <p id="masterGlobalVolume" class="text-xl sm:text-3xl font-black text-indigo-600 mt-0.5">R$ 0,00</p>
         </div>
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs uppercase font-semibold text-slate-500">Vendas Totais</span>
-          <p id="masterTotalSalesCount" class="text-3xl font-black text-slate-700 mt-1">0</p>
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl border border-slate-200 shadow-sm col-span-2 sm:col-span-1">
+          <span class="text-[10px] sm:text-xs uppercase font-semibold text-slate-500">Vendas Registradas</span>
+          <p id="masterTotalSalesCount" class="text-xl sm:text-3xl font-black text-slate-700 mt-0.5">0</p>
         </div>
       </div>
 
-      <!-- Tabela Master de Lojas & Licenças -->
+      <!-- Tabela Master de Lojas -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
-          <h3 class="font-bold text-slate-800">Controle de Lojas e Licenciamento</h3>
+        <div class="p-3 sm:p-4 border-b border-slate-100">
+          <h3 class="font-bold text-sm sm:text-base text-slate-800">Controle de Lojas e Licenciamento</h3>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+        <div class="overflow-x-auto no-scrollbar">
+          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[700px]">
+            <thead class="bg-slate-50 border-b text-[10px] sm:text-xs uppercase text-slate-500">
               <tr>
                 <th class="p-3">Loja</th>
                 <th class="p-3">Segmento</th>
                 <th class="p-3">Chave de Licença</th>
                 <th class="p-3">Validade</th>
-                <th class="p-3">Status Licença</th>
+                <th class="p-3">Status</th>
                 <th class="p-3">Faturamento</th>
-                <th class="p-3 text-right">Ações Master</th>
+                <th class="p-3 text-right">Ações</th>
               </tr>
             </thead>
             <tbody id="masterStoreTableBody"></tbody>
@@ -382,14 +439,34 @@
 
   </main>
 
+  <!-- BARRA DE NAVEGAÇÃO INFERIOR PARA DISPOSITIVOS MÓVEIS (BOTTOM NAV BAR) -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-40 px-2 py-1.5 flex justify-around items-center pb-safe">
+    <button onclick="switchView('pdv')" class="nav-btn-mobile flex flex-col items-center gap-0.5 text-indigo-400 p-1.5 focus:outline-none" data-view="pdv">
+      <i class="ph ph-cash-register text-xl"></i>
+      <span class="text-[10px] font-semibold">Caixa</span>
+    </button>
+    <button onclick="switchView('produtos')" class="nav-btn-mobile flex flex-col items-center gap-0.5 text-slate-400 p-1.5 focus:outline-none" data-view="produtos">
+      <i class="ph ph-package text-xl"></i>
+      <span class="text-[10px] font-semibold">Produtos</span>
+    </button>
+    <button onclick="switchView('historico')" class="nav-btn-mobile flex flex-col items-center gap-0.5 text-slate-400 p-1.5 focus:outline-none" data-view="historico">
+      <i class="ph ph-receipt text-xl"></i>
+      <span class="text-[10px] font-semibold">Histórico</span>
+    </button>
+    <button onclick="switchView('config')" class="nav-btn-mobile flex flex-col items-center gap-0.5 text-slate-400 p-1.5 focus:outline-none" data-view="config">
+      <i class="ph ph-gear text-xl"></i>
+      <span class="text-[10px] font-semibold">Loja</span>
+    </button>
+  </nav>
+
   <!-- MODAL: LOGIN MASTER COM SENHA -->
   <div id="masterAuthModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 border border-slate-100 text-center animate-in fade-in zoom-in duration-150">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5 sm:p-6 border border-slate-100 text-center animate-in fade-in zoom-in duration-150">
       <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
         <i class="ph ph-shield-check text-2xl font-bold"></i>
       </div>
-      <h3 class="text-lg font-bold text-slate-900">Acesso Restrito ao Master</h3>
-      <p class="text-xs text-slate-500 mt-1 mb-4">Digite sua senha de administrador master para gerenciar licenças e lojas.</p>
+      <h3 class="text-base sm:text-lg font-bold text-slate-900">Acesso Restrito ao Master</h3>
+      <p class="text-xs text-slate-500 mt-1 mb-4">Digite sua senha master de administrador.</p>
       
       <form onsubmit="handleMasterLogin(event)" class="space-y-4">
         <div>
@@ -398,13 +475,13 @@
             type="password" 
             required 
             placeholder="Digite a senha..." 
-            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-center text-base focus:ring-2 focus:ring-amber-500 outline-none font-bold"
+            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-center text-sm sm:text-base focus:ring-2 focus:ring-amber-500 outline-none font-bold"
           />
-          <span class="text-[11px] text-slate-400 mt-1 block">Senha padrão inicial: <span class="font-mono font-bold text-slate-600">admin123</span></span>
+          <span class="text-[11px] text-slate-400 mt-1 block">Senha padrão: <span class="font-mono font-bold text-slate-600">admin123</span></span>
         </div>
         <div class="flex gap-2">
-          <button type="button" onclick="closeMasterAuthModal()" class="flex-1 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Cancelar</button>
-          <button type="submit" class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-sm transition">Entrar</button>
+          <button type="button" onclick="closeMasterAuthModal()" class="flex-1 py-2 text-xs sm:text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Cancelar</button>
+          <button type="submit" class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm transition">Entrar</button>
         </div>
       </form>
     </div>
@@ -412,10 +489,10 @@
 
   <!-- MODAL: GERENCIAR LICENÇA DE UMA LOJA -->
   <div id="licenseModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 border border-slate-100 space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-900 flex items-center gap-2">
-          <i class="ph ph-key text-amber-500 text-xl"></i> Gerenciar Licença do Lojista
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-5 sm:p-6 border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base">
+          <i class="ph ph-key text-amber-500 text-xl"></i> Licença do Lojista
         </h3>
         <button onclick="closeLicenseModal()" class="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
       </div>
@@ -425,109 +502,108 @@
         
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Loja</label>
-          <input id="licenseStoreNameInput" type="text" disabled class="w-full px-3 py-2 bg-slate-100 border rounded-lg text-sm font-bold text-slate-700">
+          <input id="licenseStoreNameInput" type="text" disabled class="w-full px-3 py-2 bg-slate-100 border rounded-lg text-xs sm:text-sm font-bold text-slate-700">
         </div>
 
         <div>
           <div class="flex justify-between items-center mb-1">
-            <label class="block text-xs font-semibold text-slate-600">Chave de Licença</label>
+            <label class="block text-xs font-semibold text-slate-600">Chave Serial</label>
             <button type="button" onclick="generateNewRandomKeyToInput()" class="text-[11px] text-indigo-600 hover:underline font-semibold">Gerar Nova</button>
           </div>
-          <input id="licenseKeyInput" type="text" required class="w-full px-3 py-2 border rounded-lg font-mono text-sm uppercase font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+          <input id="licenseKeyInput" type="text" required class="w-full px-3 py-2 border rounded-lg font-mono text-xs sm:text-sm uppercase font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Expiração / Validade</label>
-          <input id="licenseExpiryInput" type="date" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Expiração</label>
+          <input id="licenseExpiryInput" type="date" required class="w-full px-3 py-2 border rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Status da Licença</label>
-          <select id="licenseStatusInput" class="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
+          <select id="licenseStatusInput" class="w-full px-3 py-2 border rounded-lg text-xs sm:text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
             <option value="ativa">Ativa (Acesso Liberado)</option>
             <option value="bloqueada">Bloqueada / Suspensa</option>
           </select>
         </div>
 
-        <div class="pt-3 flex justify-end gap-2">
-          <button type="button" onclick="closeLicenseModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
-          <button type="submit" class="px-5 py-2 text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg">Atualizar Licença</button>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeLicenseModal()" class="px-4 py-2 text-xs sm:text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+          <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg">Salvar Licença</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- MODAL: FINALIZAR VENDA (PAGAMENTO COM CARTÃO DÉBITO E CRÉDITO INDIVIDUAIS) -->
-  <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-150">
+  <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in slide-in-from-bottom sm:zoom-in duration-200">
       
-      <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
-        <h3 class="font-bold flex items-center gap-2">
+      <div class="p-3.5 sm:p-4 bg-slate-900 text-white flex justify-between items-center">
+        <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
           <i class="ph ph-credit-card text-emerald-400 text-lg"></i> Conclusão da Venda
         </h3>
-        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
       </div>
 
-      <div class="p-5 space-y-4">
+      <div class="p-4 sm:p-5 space-y-3.5">
         <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex justify-between items-center">
-          <span class="text-sm font-semibold text-indigo-900">Total a Cobrar:</span>
-          <span id="modalPayableTotal" class="text-2xl font-black text-indigo-700">R$ 0,00</span>
+          <span class="text-xs sm:text-sm font-semibold text-indigo-900">Total a Cobrar:</span>
+          <span id="modalPayableTotal" class="text-xl sm:text-2xl font-black text-indigo-700">R$ 0,00</span>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-2">Forma de Pagamento</label>
-          <!-- 4 opções de pagamento: PIX, Dinheiro, Débito e Crédito -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button type="button" onclick="selectPaymentMethod('pix')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="pix">
-              <i class="ph ph-qr-code text-2xl text-teal-600"></i>
-              <span class="text-xs font-bold text-slate-700">PIX</span>
+          <div class="grid grid-cols-4 gap-1.5 sm:gap-2">
+            <button type="button" onclick="selectPaymentMethod('pix')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="pix">
+              <i class="ph ph-qr-code text-xl sm:text-2xl text-teal-600"></i>
+              <span class="text-[10px] sm:text-xs font-bold text-slate-700">PIX</span>
             </button>
-            <button type="button" onclick="selectPaymentMethod('dinheiro')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="dinheiro">
-              <i class="ph ph-money text-2xl text-emerald-600"></i>
-              <span class="text-xs font-bold text-slate-700">Dinheiro</span>
+            <button type="button" onclick="selectPaymentMethod('dinheiro')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="dinheiro">
+              <i class="ph ph-money text-xl sm:text-2xl text-emerald-600"></i>
+              <span class="text-[10px] sm:text-xs font-bold text-slate-700">Dinheiro</span>
             </button>
-            <button type="button" onclick="selectPaymentMethod('debito')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="debito">
-              <i class="ph ph-credit-card text-2xl text-blue-600"></i>
-              <span class="text-xs font-bold text-slate-700">Débito</span>
+            <button type="button" onclick="selectPaymentMethod('debito')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="debito">
+              <i class="ph ph-credit-card text-xl sm:text-2xl text-blue-600"></i>
+              <span class="text-[10px] sm:text-xs font-bold text-slate-700">Débito</span>
             </button>
-            <button type="button" onclick="selectPaymentMethod('credito')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="credito">
-              <i class="ph ph-credit-card text-2xl text-purple-600"></i>
-              <span class="text-xs font-bold text-slate-700">Crédito</span>
+            <button type="button" onclick="selectPaymentMethod('credito')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="credito">
+              <i class="ph ph-credit-card text-xl sm:text-2xl text-purple-600"></i>
+              <span class="text-[10px] sm:text-xs font-bold text-slate-700">Crédito</span>
             </button>
           </div>
         </div>
 
-        <!-- Painel Dinheiro (Cálculo de Troco Automático) -->
-        <div id="cashPanel" class="hidden space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+        <!-- Painel Dinheiro -->
+        <div id="cashPanel" class="hidden space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Recebido do Cliente (R$)</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Recebido (R$)</label>
             <input id="cashReceivedInput" type="number" step="0.5" placeholder="0,00" oninput="calculateChange()" class="w-full px-3 py-2 border rounded-lg text-base font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
           </div>
-          <div class="flex justify-between items-center pt-1 text-sm">
+          <div class="flex justify-between items-center text-xs sm:text-sm">
             <span class="font-semibold text-slate-600">Troco:</span>
-            <span id="cashChangeDisplay" class="text-lg font-black text-emerald-600">R$ 0,00</span>
+            <span id="cashChangeDisplay" class="text-base sm:text-lg font-black text-emerald-600">R$ 0,00</span>
           </div>
         </div>
 
         <!-- Painel PIX -->
         <div id="pixPanel" class="hidden text-center p-3 bg-teal-50 rounded-xl border border-teal-200">
-          <i class="ph ph-check-circle text-3xl text-teal-600"></i>
-          <p class="text-xs text-teal-800 font-medium mt-1">Confirme o recebimento via chave ou QR Code PIX.</p>
+          <i class="ph ph-check-circle text-2xl sm:text-3xl text-teal-600"></i>
+          <p class="text-xs text-teal-800 font-medium mt-1">Aguardando confirmação via QR Code ou Chave PIX.</p>
         </div>
 
         <!-- Painel Cartão Débito -->
         <div id="debitPanel" class="hidden text-center p-3 bg-blue-50 rounded-xl border border-blue-200">
-          <i class="ph ph-credit-card text-3xl text-blue-600"></i>
-          <p class="text-xs text-blue-800 font-medium mt-1">Insira ou aproxime o cartão na maquininha na opção <strong>DÉBITO</strong>.</p>
+          <i class="ph ph-credit-card text-2xl sm:text-3xl text-blue-600"></i>
+          <p class="text-xs text-blue-800 font-medium mt-1">Processe a operação na maquininha em <strong>DÉBITO</strong>.</p>
         </div>
 
         <!-- Painel Cartão Crédito -->
         <div id="creditPanel" class="hidden text-center p-3 bg-purple-50 rounded-xl border border-purple-200">
-          <i class="ph ph-credit-card text-3xl text-purple-600"></i>
-          <p class="text-xs text-purple-800 font-medium mt-1">Insira ou aproxime o cartão na maquininha na opção <strong>CRÉDITO</strong>.</p>
+          <i class="ph ph-credit-card text-2xl sm:text-3xl text-purple-600"></i>
+          <p class="text-xs text-purple-800 font-medium mt-1">Processe a operação na maquininha em <strong>CRÉDITO</strong>.</p>
         </div>
 
-        <button onclick="confirmSale()" id="confirmSaleBtn" disabled class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-md transition">
+        <button onclick="confirmSale()" id="confirmSaleBtn" disabled class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-md transition text-sm sm:text-base">
           Confirmar e Concluir Venda
         </button>
       </div>
@@ -535,7 +611,7 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT: LÓGICA DE LICENCIAMENTO, SEGURANÇA E PDV -->
+  <!-- JAVASCRIPT: LÓGICA E ADAPTAÇÃO RESPONSIVA -->
   <script>
     function generateLicenseKey() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -574,8 +650,9 @@
         },
         products: [
           { id: "p1", name: "Camiseta Oversized Algodão", barcode: "7891001", price: 79.90 },
-          { id: "p2", name: "Calça Jeans Slim", barcode: "7891002", price: 159.00 },
-          { id: "p3", name: "Vestido Midi Floral", barcode: "7891003", price: 189.90 }
+          { id: "p2", name: "Calça Jeans Slim Fit", barcode: "7891002", price: 159.00 },
+          { id: "p3", name: "Vestido Midi Floral", barcode: "7891003", price: 189.90 },
+          { id: "p4", name: "Tênis Casual Branco", barcode: "7891004", price: 219.00 }
         ],
         sales: []
       }
@@ -586,6 +663,7 @@
     let cart = [];
     let appliedDiscount = { type: 'fixed', value: 0 };
     let selectedPayment = null;
+    let currentMobilePdvTab = 'catalog'; // 'catalog' | 'cart'
 
     function saveState() {
       localStorage.setItem('app_stores', JSON.stringify(stores));
@@ -607,12 +685,12 @@
         return { valid: false, reason: "Loja sem licença configurada." };
       }
       if (store.license.status === "bloqueada") {
-        return { valid: false, reason: "A licença desta loja foi suspensa ou desativada pelo Master ADM." };
+        return { valid: false, reason: "A licença desta loja foi suspensa pelo Master ADM." };
       }
 
       const today = new Date().toISOString().split('T')[0];
       if (store.license.expiryDate && store.license.expiryDate < today) {
-        return { valid: false, reason: `Licença expirou em ${store.license.expiryDate}. Renove com a administração.` };
+        return { valid: false, reason: `Licença expirou em ${store.license.expiryDate}. Renove com o suporte.` };
       }
 
       return { valid: true, reason: "" };
@@ -630,13 +708,13 @@
         document.getElementById('licenseBlockedKey').innerText = store.license?.key || 'N/A';
         overlay.classList.remove('hidden');
 
-        badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30";
-        badge.innerText = "Licença Inválida";
+        badge.className = "text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 whitespace-nowrap";
+        badge.innerText = "Inválida";
         return false;
       } else {
         overlay.classList.add('hidden');
-        badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-        badge.innerText = "Licença Ativa";
+        badge.className = "text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap";
+        badge.innerText = "Ativa";
         return true;
       }
     }
@@ -661,6 +739,52 @@
       enforceLicense();
     }
 
+    // --- CONTROLE DE ABAS MOBILE NO PDV ---
+    function switchMobilePdvTab(tab) {
+      currentMobilePdvTab = tab;
+      const catCol = document.getElementById('pdvCatalogColumn');
+      const cartCol = document.getElementById('pdvCartColumn');
+      const btnCat = document.getElementById('mobileTabCatalogBtn');
+      const btnCart = document.getElementById('mobileTabCartBtn');
+
+      if (tab === 'catalog') {
+        catCol.classList.remove('hidden');
+        cartCol.classList.add('hidden');
+        btnCat.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white flex items-center justify-center gap-1.5 transition";
+        btnCart.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-1.5 transition relative";
+      } else {
+        catCol.classList.add('hidden');
+        cartCol.classList.remove('hidden');
+        btnCart.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white flex items-center justify-center gap-1.5 transition relative";
+        btnCat.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-1.5 transition";
+      }
+      updateMobileFloatingBar();
+    }
+
+    function updateMobileFloatingBar() {
+      const floatingBar = document.getElementById('mobileCartFloatingBar');
+      const totals = calculateCartTotals();
+      const count = cart.reduce((acc, i) => acc + i.qty, 0);
+
+      // Atualiza badge da aba
+      const mobileBadge = document.getElementById('mobileCartBadge');
+      if (count > 0) {
+        mobileBadge.innerText = count;
+        mobileBadge.classList.remove('hidden');
+      } else {
+        mobileBadge.classList.add('hidden');
+      }
+
+      // Mostra a barra flutuante no celular apenas se estiver na aba catálogo com itens no carrinho
+      if (count > 0 && currentMobilePdvTab === 'catalog') {
+        document.getElementById('floatingCartCount').innerText = count;
+        document.getElementById('floatingCartTotal').innerText = formatBRL(totals.total);
+        floatingBar.classList.remove('hidden');
+      } else {
+        floatingBar.classList.add('hidden');
+      }
+    }
+
     // --- AUTENTICAÇÃO MASTER ADM ---
     function handleMasterButtonClick() {
       if (isMasterAuthenticated) {
@@ -668,7 +792,7 @@
       } else {
         document.getElementById('masterPasswordInput').value = '';
         document.getElementById('masterAuthModal').classList.remove('hidden');
-        setTimeout(() => document.getElementById('masterPasswordInput').focus(), 100);
+        setTimeout(() => document.getElementById('masterPasswordInput').focus(), 150);
       }
     }
 
@@ -684,7 +808,7 @@
         closeMasterAuthModal();
         switchView('master');
       } else {
-        alert("Senha Master incorreta! Tente novamente.");
+        alert("Senha Master incorreta!");
         document.getElementById('masterPasswordInput').value = '';
       }
     }
@@ -700,22 +824,22 @@
     }
 
     function changeMasterPasswordPrompt() {
-      const oldPwd = prompt("Digite a senha Master atual:");
+      const oldPwd = prompt("Senha Master atual:");
       if (oldPwd !== masterPassword) {
-        alert("Senha atual incorreta.");
+        alert("Senha incorreta.");
         return;
       }
-      const newPwd = prompt("Digite a NOVA senha Master:");
+      const newPwd = prompt("Nova senha Master:");
       if (!newPwd || newPwd.trim().length < 4) {
         alert("A senha deve ter pelo menos 4 caracteres.");
         return;
       }
       masterPassword = newPwd.trim();
       saveState();
-      alert("Senha Master alterada com sucesso!");
+      alert("Senha alterada com sucesso!");
     }
 
-    // --- GERENCIAMENTO DE LICENÇAS NO MASTER ---
+    // --- GESTÃO DE LICENÇAS NO MASTER ---
     function openLicenseModal(storeId) {
       const store = stores.find(s => s.id === storeId);
       if (!store) return;
@@ -753,7 +877,7 @@
       closeLicenseModal();
       renderMasterDashboard();
       renderStoreHeader();
-      alert(`Licença da loja "${store.name}" atualizada com sucesso!`);
+      alert(`Licença da loja "${store.name}" atualizada!`);
     }
 
     function toggleStoreStatusQuick(storeId) {
@@ -797,27 +921,27 @@
         tr.innerHTML = `
           <td class="p-3">
             <span class="font-bold text-slate-800">${s.name}</span>
-            ${isCurrent ? '<span class="ml-2 text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-bold">Ativa no PDV</span>' : ''}
+            ${isCurrent ? '<span class="ml-1 text-[9px] bg-indigo-100 text-indigo-800 px-1 py-0.5 rounded font-bold">Ativa</span>' : ''}
           </td>
           <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${s.segment}</span></td>
           <td class="p-3 font-mono text-xs font-semibold text-slate-700">${s.license?.key || 'Sem chave'}</td>
           <td class="p-3 text-xs font-semibold ${!licStatus.valid ? 'text-rose-600' : 'text-slate-700'}">${s.license?.expiryDate || 'N/A'}</td>
           <td class="p-3">
             <span class="px-2 py-0.5 rounded-full text-xs font-bold ${licStatus.valid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-              ${licStatus.valid ? 'Ativa' : 'Bloqueada/Vencida'}
+              ${licStatus.valid ? 'Ativa' : 'Bloqueada'}
             </span>
           </td>
           <td class="p-3 font-bold text-slate-900">${formatBRL(storeTotal)}</td>
-          <td class="p-3 text-right space-x-1">
-            <button onclick="openLicenseModal('${s.id}')" title="Configurar Licença" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 rounded text-xs font-semibold border border-amber-400/30">
-              <i class="ph ph-key"></i> Licença
+          <td class="p-3 text-right space-x-1 whitespace-nowrap">
+            <button onclick="openLicenseModal('${s.id}')" title="Licença" class="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 rounded text-xs font-semibold border border-amber-400/30">
+              <i class="ph ph-key"></i>
             </button>
-            <button onclick="toggleStoreStatusQuick('${s.id}')" title="Alternar Bloqueio" class="px-2.5 py-1 ${s.license?.status === 'bloqueada' ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-rose-100 hover:bg-rose-200 text-rose-700'} rounded text-xs font-semibold">
-              ${s.license?.status === 'bloqueada' ? 'Desbloquear' : 'Suspender'}
+            <button onclick="toggleStoreStatusQuick('${s.id}')" class="px-2 py-1 ${s.license?.status === 'bloqueada' ? 'bg-emerald-600 text-white' : 'bg-rose-100 text-rose-700'} rounded text-xs font-semibold">
+              ${s.license?.status === 'bloqueada' ? 'Ativar' : 'Suspender'}
             </button>
             ${!isCurrent ? 
-              `<button onclick="switchToStore('${s.id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold">Acessar</button>` : 
-              `<span class="text-xs text-slate-400">Em operação</span>`
+              `<button onclick="switchToStore('${s.id}')" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold">Acessar</button>` : 
+              `<span class="text-xs text-slate-400">Operando</span>`
             }
           </td>
         `;
@@ -840,7 +964,7 @@
       const name = prompt("Nome da nova loja:");
       if (!name) return;
       const segment = prompt("Segmento (Moda, Calçados, Cosméticos, Variedades ou Comércio Geral):", "Comércio Geral");
-      const days = parseInt(prompt("Quantos dias de validade da licença inicial?", "30")) || 30;
+      const days = parseInt(prompt("Dias de validade da licença inicial:", "30")) || 30;
 
       const newStore = {
         id: "store_" + Date.now(),
@@ -861,7 +985,7 @@
       saveState();
       initApp();
       renderMasterDashboard();
-      alert(`Loja "${name}" criada com sucesso!\nChave: ${newStore.license.key}\nValidade: ${newStore.license.expiryDate}`);
+      alert(`Loja "${name}" criada com sucesso!`);
     }
 
     // --- CATÁLOGO & FRENTE DE CAIXA (PDV) ---
@@ -878,21 +1002,21 @@
       document.getElementById('productCounterBadge').innerText = `${filtered.length} itens`;
 
       if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-sm">Nenhum produto localizado.</div>`;
+        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-xs sm:text-sm">Nenhum produto localizado.</div>`;
         return;
       }
 
       filtered.forEach(p => {
         const card = document.createElement('div');
-        card.className = "p-3 border border-slate-200 rounded-xl hover:border-indigo-500 hover:shadow-sm transition bg-white flex flex-col justify-between cursor-pointer group";
+        card.className = "p-2.5 sm:p-3 border border-slate-200 rounded-xl hover:border-indigo-500 hover:shadow-sm transition bg-white flex flex-col justify-between cursor-pointer group active:scale-[0.98]";
         card.onclick = () => addToCart(p);
         card.innerHTML = `
           <div>
-            <span class="text-[10px] text-slate-400 font-mono block">Cód: ${p.barcode}</span>
-            <h4 class="font-bold text-xs text-slate-700 group-hover:text-indigo-600 line-clamp-2 mt-0.5">${p.name}</h4>
+            <span class="text-[9px] sm:text-[10px] text-slate-400 font-mono block">#${p.barcode}</span>
+            <h4 class="font-bold text-xs sm:text-sm text-slate-700 group-hover:text-indigo-600 line-clamp-2 mt-0.5">${p.name}</h4>
           </div>
           <div class="mt-2 flex justify-between items-center">
-            <span class="font-black text-sm text-slate-900">${formatBRL(p.price)}</span>
+            <span class="font-black text-xs sm:text-sm text-slate-900">${formatBRL(p.price)}</span>
             <span class="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-slate-600 text-xs transition">
               <i class="ph ph-plus font-bold"></i>
             </span>
@@ -961,8 +1085,8 @@
 
       if (cart.length === 0) {
         list.innerHTML = `
-          <div class="h-48 flex flex-col items-center justify-center text-slate-300">
-            <i class="ph ph-shopping-bag-open text-4xl mb-1"></i>
+          <div class="h-36 sm:h-48 flex flex-col items-center justify-center text-slate-300">
+            <i class="ph ph-shopping-bag-open text-3xl sm:text-4xl mb-1"></i>
             <span class="text-xs">O caixa está vazio</span>
           </div>
         `;
@@ -974,16 +1098,16 @@
           const row = document.createElement('div');
           row.className = "flex items-center justify-between gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs";
           row.innerHTML = `
-            <div class="flex-1 truncate">
+            <div class="flex-1 min-w-0">
               <span class="font-bold text-slate-800 block truncate">${item.product.name}</span>
               <span class="text-slate-500 font-medium">${formatBRL(item.product.price)} un.</span>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1 shrink-0">
               <button onclick="changeCartQty(${index}, -1)" class="w-6 h-6 rounded bg-white border border-slate-300 hover:bg-slate-100 font-bold text-slate-700 flex items-center justify-center">-</button>
               <span class="w-5 text-center font-bold text-slate-800">${item.qty}</span>
               <button onclick="changeCartQty(${index}, 1)" class="w-6 h-6 rounded bg-white border border-slate-300 hover:bg-slate-100 font-bold text-slate-700 flex items-center justify-center">+</button>
             </div>
-            <div class="text-right w-16">
+            <div class="text-right w-16 shrink-0">
               <span class="font-bold text-slate-800 block">${formatBRL(itemTotal)}</span>
               <button onclick="removeCartItem(${index})" class="text-[10px] text-rose-500 hover:underline">Remover</button>
             </div>
@@ -995,6 +1119,7 @@
       const totals = calculateCartTotals();
       document.getElementById('subtotalDisplay').innerText = formatBRL(totals.subtotal);
       document.getElementById('totalDisplay').innerText = formatBRL(totals.total);
+      updateMobileFloatingBar();
     }
 
     const searchInput = document.getElementById('barcodeSearchInput');
@@ -1022,7 +1147,7 @@
       }
     });
 
-    // --- CHECKOUT & MODAL DE PAGAMENTO (INDIVIDUALIZADO) ---
+    // --- CHECKOUT & MODAL DE PAGAMENTO ---
     function openPaymentModal() {
       if (!enforceLicense() || cart.length === 0) return;
       const { total } = calculateCartTotals();
@@ -1097,7 +1222,7 @@
         subtotal: totals.subtotal,
         discount: totals.discountAmount,
         total: totals.total,
-        paymentMethod: selectedPayment, // 'pix' | 'dinheiro' | 'debito' | 'credito'
+        paymentMethod: selectedPayment,
         status: 'Concluída'
       };
 
@@ -1106,27 +1231,32 @@
 
       clearCart();
       closePaymentModal();
+      
+      // Retorna para o catálogo se estiver no mobile
+      if (window.innerWidth < 1024) {
+        switchMobilePdvTab('catalog');
+      }
+
       alert(`Venda ${sale.id} realizada com sucesso!`);
       renderSalesHistory();
     }
 
-    // Retorna etiqueta e cor para cada método de pagamento
     function getPaymentBadge(method) {
       switch (method) {
         case 'dinheiro':
-          return '<span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800">Dinheiro</span>';
+          return '<span class="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold bg-emerald-100 text-emerald-800">Dinheiro</span>';
         case 'pix':
-          return '<span class="px-2 py-0.5 rounded text-xs font-bold bg-teal-100 text-teal-800">PIX</span>';
+          return '<span class="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold bg-teal-100 text-teal-800">PIX</span>';
         case 'debito':
-          return '<span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800">Cartão Débito</span>';
+          return '<span class="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold bg-blue-100 text-blue-800">Débito</span>';
         case 'credito':
-          return '<span class="px-2 py-0.5 rounded text-xs font-bold bg-purple-100 text-purple-800">Cartão Crédito</span>';
+          return '<span class="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold bg-purple-100 text-purple-800">Crédito</span>';
         default:
-          return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800">${method}</span>`;
+          return `<span class="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold bg-slate-100 text-slate-800">${method}</span>`;
       }
     }
 
-    // --- HISTÓRICO & FECHAMENTO DE CAIXA (DETALHADO POR FORMA) ---
+    // --- HISTÓRICO & FECHAMENTO DE CAIXA ---
     function renderSalesHistory() {
       const store = getCurrentStore();
       const tbody = document.getElementById('salesTableBody');
@@ -1147,7 +1277,6 @@
           else if (sale.paymentMethod === 'pix') pixTotal += sale.total;
           else if (sale.paymentMethod === 'debito') debitTotal += sale.total;
           else if (sale.paymentMethod === 'credito') creditTotal += sale.total;
-          // Retrocompatibilidade se tiver venda salva como 'cartao' antigo
           else if (sale.paymentMethod === 'cartao') debitTotal += sale.total;
         }
 
@@ -1158,16 +1287,16 @@
         tr.className = "border-b hover:bg-slate-50";
         tr.innerHTML = `
           <td class="p-3 font-mono font-bold text-xs">${sale.id}</td>
-          <td class="p-3 text-xs">${dateStr}</td>
-          <td class="p-3 max-w-xs truncate text-xs" title="${itemsSummary}">${itemsSummary}</td>
-          <td class="p-3">${getPaymentBadge(sale.paymentMethod)}</td>
-          <td class="p-3 font-bold text-slate-800">${formatBRL(sale.total)}</td>
-          <td class="p-3">
-            <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${sale.status === 'Concluída' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+          <td class="p-3 text-xs whitespace-nowrap">${dateStr}</td>
+          <td class="p-3 max-w-[150px] truncate text-xs" title="${itemsSummary}">${itemsSummary}</td>
+          <td class="p-3 whitespace-nowrap">${getPaymentBadge(sale.paymentMethod)}</td>
+          <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${formatBRL(sale.total)}</td>
+          <td class="p-3 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold ${sale.status === 'Concluída' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
               ${sale.status}
             </span>
           </td>
-          <td class="p-3 text-right">
+          <td class="p-3 text-right whitespace-nowrap">
             ${sale.status === 'Concluída' ? 
               `<button onclick="cancelSale('${sale.id}')" class="text-xs text-rose-600 hover:text-rose-800 font-bold">Cancelar</button>` : 
               `<span class="text-xs text-slate-400">Cancelada</span>`
@@ -1178,7 +1307,7 @@
       });
 
       document.getElementById('boxTotalSales').innerText = formatBRL(totalFaturado);
-      document.getElementById('boxCountSales').innerText = `${count} vendas válidas`;
+      document.getElementById('boxCountSales').innerText = `${count} vendas`;
       document.getElementById('boxCashSales').innerText = formatBRL(cashTotal);
       document.getElementById('boxPixSales').innerText = formatBRL(pixTotal);
       document.getElementById('boxDebitSales').innerText = formatBRL(debitTotal);
@@ -1186,7 +1315,7 @@
     }
 
     function cancelSale(saleId) {
-      if (!confirm(`Deseja cancelar a venda ${saleId}? O valor será deduzido do caixa.`)) return;
+      if (!confirm(`Deseja cancelar a venda ${saleId}?`)) return;
       const store = getCurrentStore();
       const sale = store.sales.find(s => s.id === saleId);
       if (sale) {
@@ -1204,7 +1333,7 @@
         `RELATÓRIO DE FECHAMENTO DE CAIXA:\n` +
         `Loja: ${store.name}\n` +
         `Total Faturado no Turno: ${formatBRL(total)}\n\n` +
-        `Deseja fechar o caixa e limpar os registros para abertura do próximo turno?`
+        `Deseja fechar o caixa e limpar os registros para o próximo turno?`
       );
 
       if (confirmClose) {
@@ -1227,8 +1356,8 @@
         tr.innerHTML = `
           <td class="p-3 font-mono text-xs">${p.barcode}</td>
           <td class="p-3 font-bold text-slate-800">${p.name}</td>
-          <td class="p-3">${formatBRL(p.price)}</td>
-          <td class="p-3 text-right space-x-2">
+          <td class="p-3 whitespace-nowrap">${formatBRL(p.price)}</td>
+          <td class="p-3 text-right space-x-2 whitespace-nowrap">
             <button onclick="editProduct('${p.id}')" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">Editar</button>
             <button onclick="deleteProduct('${p.id}')" class="text-xs text-rose-600 hover:text-rose-800 font-semibold">Excluir</button>
           </td>
@@ -1308,24 +1437,38 @@
 
       saveState();
       renderStoreHeader();
-      alert("Configurações da loja atualizadas com sucesso!");
+      alert("Configurações atualizadas!");
     }
 
-    // --- NAVEGAÇÃO DE TELAS ---
+    // --- NAVEGAÇÃO DE TELAS (DESKTOP & MOBILE INTEGRADOS) ---
     function switchView(viewName) {
       document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
       document.getElementById(`view-${viewName}`).classList.remove('hidden');
 
-      document.querySelectorAll('.nav-btn').forEach(btn => {
+      // Atualiza botões Desktop
+      document.querySelectorAll('.nav-btn-desktop').forEach(btn => {
         btn.classList.remove('bg-indigo-600', 'text-white');
         if (!btn.classList.contains('bg-amber-500/20')) {
           btn.classList.add('text-slate-300');
+        }
+        if (btn.dataset.view === viewName && !btn.classList.contains('bg-amber-500/20')) {
+          btn.classList.add('bg-indigo-600', 'text-white');
+          btn.classList.remove('text-slate-300');
+        }
+      });
+
+      // Atualiza botões Mobile
+      document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
+        if (btn.dataset.view === viewName) {
+          btn.className = "nav-btn-mobile flex flex-col items-center gap-0.5 text-indigo-400 p-1.5 focus:outline-none";
+        } else {
+          btn.className = "nav-btn-mobile flex flex-col items-center gap-0.5 text-slate-400 p-1.5 focus:outline-none";
         }
       });
 
       if (viewName === 'pdv') {
         renderPdvProducts();
-        setTimeout(() => document.getElementById('barcodeSearchInput').focus(), 100);
+        updateMobileFloatingBar();
       } else if (viewName === 'produtos') {
         renderProductsTable();
       } else if (viewName === 'historico') {
@@ -1335,9 +1478,11 @@
       } else if (viewName === 'master') {
         renderMasterDashboard();
       }
+
+      window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
-    // Atalhos do PDV
+    // Atalhos do teclado
     window.addEventListener('keydown', (e) => {
       if (e.key === 'F2') {
         e.preventDefault();
@@ -1347,6 +1492,17 @@
         closePaymentModal();
         closeMasterAuthModal();
         closeLicenseModal();
+      }
+    });
+
+    // Ajuste dinâmico de resize para garantir exibição correta
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024) {
+        document.getElementById('pdvCatalogColumn').classList.remove('hidden');
+        document.getElementById('pdvCartColumn').classList.remove('hidden');
+        document.getElementById('mobileCartFloatingBar').classList.add('hidden');
+      } else {
+        switchMobilePdvTab(currentMobilePdvTab);
       }
     });
 
@@ -1366,6 +1522,11 @@
       renderStoreHeader();
       renderPdvProducts();
       renderCart();
+
+      // Ajusta tela mobile inicial
+      if (window.innerWidth < 1024) {
+        switchMobilePdvTab('catalog');
+      }
     }
 
     initApp();
