@@ -735,19 +735,20 @@
   </div>
 
   <!-- JAVASCRIPT: LÓGICA E SINCRONIZAÇÃO EM NUVEM (FIRESTORE) -->
-  <script>
+<script>
     // =========================================================================
-    // CONFIGURAÇÃO DO FIREBASE (COLE SUAS CHAVES DO FIREBASE CONSOLE AQUI)
+    // CONFIGURAÇÃO DO FIREBASE
     // =========================================================================
-    const firebaseConfig = {
-      apiKey: "AIzaSyCurtRDF7xWbr08pamBciCEv5fQ6-FTmJI",
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCurtRDF7xWbr08pam8cICEv5fQ6-FTmJI",
       authDomain: "pdv-master-sistema.firebaseapp.com",
       projectId: "pdv-master-sistema",
       storageBucket: "pdv-master-sistema.firebasestorage.app",
       messagingSenderId: "945557195351",
       appId: "1:945557195351:web:69f6ea4611a224dd9e7112",
-      measurementId: "G-S9PWN794GN"
+      measurementId: "G-59PWN794GN"
     };
+
     let db = null;
     let isCloudActive = false;
 
