@@ -58,7 +58,7 @@
           <i class="ph ph-package text-lg"></i> Produtos
         </button>
         <button onclick="switchView('historico')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
-          <i class="ph ph-receipt text-lg"></i> Histórico
+          <i class="ph ph-receipt text-lg"></i> Histórico & Caixa
         </button>
         <button onclick="switchView('config')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
           <i class="ph ph-gear text-lg"></i> Minha Loja
@@ -194,31 +194,45 @@
       </div>
     </section>
 
-    <!-- VIEW: HISTÓRICO & FECHAMENTO -->
+    <!-- VIEW: HISTÓRICO & FECHAMENTO COM CARDS INDIVIDUAIS DE DÉBITO E CRÉDITO -->
     <section id="view-historico" class="view-panel hidden space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      
+      <!-- Resumo Financeiro por Modalidade -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase">Total Faturado</span>
+          <span class="text-xs text-slate-500 font-semibold uppercase">Total Geral</span>
           <p id="boxTotalSales" class="text-2xl font-black text-indigo-600 mt-1">R$ 0,00</p>
           <span id="boxCountSales" class="text-xs text-slate-400">0 vendas</span>
         </div>
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase">Dinheiro</span>
-          <p id="boxCashSales" class="text-xl font-bold text-slate-700 mt-1">R$ 0,00</p>
+          <span class="text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
+            <i class="ph ph-money text-emerald-600"></i> Dinheiro
+          </span>
+          <p id="boxCashSales" class="text-xl font-bold text-slate-800 mt-1">R$ 0,00</p>
         </div>
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase">PIX</span>
-          <p id="boxPixSales" class="text-xl font-bold text-slate-700 mt-1">R$ 0,00</p>
+          <span class="text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
+            <i class="ph ph-qr-code text-teal-600"></i> PIX
+          </span>
+          <p id="boxPixSales" class="text-xl font-bold text-slate-800 mt-1">R$ 0,00</p>
         </div>
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span class="text-xs text-slate-500 font-semibold uppercase">Cartões</span>
-          <p id="boxCardSales" class="text-xl font-bold text-slate-700 mt-1">R$ 0,00</p>
+          <span class="text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
+            <i class="ph ph-credit-card text-blue-600"></i> Cartão Débito
+          </span>
+          <p id="boxDebitSales" class="text-xl font-bold text-slate-800 mt-1">R$ 0,00</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-500 font-semibold uppercase flex items-center gap-1">
+            <i class="ph ph-credit-card text-purple-600"></i> Cartão Crédito
+          </span>
+          <p id="boxCreditSales" class="text-xl font-bold text-slate-800 mt-1">R$ 0,00</p>
         </div>
       </div>
 
       <div class="flex justify-between items-center">
         <h2 class="text-lg font-bold text-slate-800">Histórico de Transações</h2>
-        <button onclick="closeRegisterModal()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2">
+        <button onclick="closeRegisterModal()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm">
           <i class="ph ph-lock-key text-lg"></i> Fechar Caixa
         </button>
       </div>
@@ -231,7 +245,7 @@
                 <th class="p-3">ID</th>
                 <th class="p-3">Data/Hora</th>
                 <th class="p-3">Itens</th>
-                <th class="p-3">Forma</th>
+                <th class="p-3">Forma de Pagamento</th>
                 <th class="p-3">Total</th>
                 <th class="p-3">Status</th>
                 <th class="p-3 text-right">Ação</th>
@@ -279,7 +293,7 @@
         </form>
       </div>
 
-      <!-- Informações da Licença Atual (Visualização da Loja) -->
+      <!-- Informações da Licença Atual -->
       <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 text-sm space-y-2">
         <h3 class="font-bold text-slate-800 flex items-center gap-2">
           <i class="ph ph-key text-indigo-600"></i> Informações da Licença Desta Loja
@@ -298,7 +312,7 @@
       </div>
     </section>
 
-    <!-- VIEW: PAINEL MASTER ADM GERAL (PROTEGIDO POR SENHA) -->
+    <!-- VIEW: PAINEL MASTER ADM (PROTEGIDO POR SENHA) -->
     <section id="view-master" class="view-panel hidden space-y-6">
       <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -307,7 +321,7 @@
             <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">Sessão Autenticada</span>
           </div>
           <h2 class="text-2xl font-black mt-1">Gestão Central & Licenciamento</h2>
-          <p class="text-xs text-slate-300 mt-1">Gerencie todas as lojas conveniadas, ative chaves de licença e bloqueie acessos.</p>
+          <p class="text-xs text-slate-300 mt-1">Controle chaves de acesso, faturamento e validade de cada loja cliente.</p>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="changeMasterPasswordPrompt()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1 border border-slate-700">
@@ -322,7 +336,7 @@
         </div>
       </div>
 
-      <!-- Resumo Global -->
+      <!-- Resumo Global Master -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <span class="text-xs uppercase font-semibold text-slate-500">Lojas Totais</span>
@@ -346,7 +360,6 @@
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex justify-between items-center">
           <h3 class="font-bold text-slate-800">Controle de Lojas e Licenciamento</h3>
-          <span class="text-xs text-slate-400">Você pode prorrogar ou revogar a licença de qualquer lojista aqui.</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm text-slate-600">
@@ -417,7 +430,7 @@
 
         <div>
           <div class="flex justify-between items-center mb-1">
-            <label class="block text-xs font-semibold text-slate-600">Chave de Licença (Licença Serial)</label>
+            <label class="block text-xs font-semibold text-slate-600">Chave de Licença</label>
             <button type="button" onclick="generateNewRandomKeyToInput()" class="text-[11px] text-indigo-600 hover:underline font-semibold">Gerar Nova</button>
           </div>
           <input id="licenseKeyInput" type="text" required class="w-full px-3 py-2 border rounded-lg font-mono text-sm uppercase font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -444,44 +457,50 @@
     </div>
   </div>
 
-  <!-- MODAL: FINALIZAR VENDA (PAGAMENTO E TROCO) -->
+  <!-- MODAL: FINALIZAR VENDA (PAGAMENTO COM CARTÃO DÉBITO E CRÉDITO INDIVIDUAIS) -->
   <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-150">
       
       <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
         <h3 class="font-bold flex items-center gap-2">
-          <i class="ph ph-credit-card text-emerald-400 text-lg"></i> Pagamento & Conclusão
+          <i class="ph ph-credit-card text-emerald-400 text-lg"></i> Conclusão da Venda
         </h3>
         <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
       </div>
 
       <div class="p-5 space-y-4">
         <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex justify-between items-center">
-          <span class="text-sm font-semibold text-indigo-900">Total a Pagar:</span>
+          <span class="text-sm font-semibold text-indigo-900">Total a Cobrar:</span>
           <span id="modalPayableTotal" class="text-2xl font-black text-indigo-700">R$ 0,00</span>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-2">Selecione o Meio de Pagamento</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="selectPaymentMethod('pix')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center gap-1 transition" data-method="pix">
+          <label class="block text-xs font-semibold text-slate-600 mb-2">Forma de Pagamento</label>
+          <!-- 4 opções de pagamento: PIX, Dinheiro, Débito e Crédito -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button type="button" onclick="selectPaymentMethod('pix')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="pix">
               <i class="ph ph-qr-code text-2xl text-teal-600"></i>
-              <span class="text-xs font-bold">PIX</span>
+              <span class="text-xs font-bold text-slate-700">PIX</span>
             </button>
-            <button type="button" onclick="selectPaymentMethod('dinheiro')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center gap-1 transition" data-method="dinheiro">
+            <button type="button" onclick="selectPaymentMethod('dinheiro')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="dinheiro">
               <i class="ph ph-money text-2xl text-emerald-600"></i>
-              <span class="text-xs font-bold">Dinheiro</span>
+              <span class="text-xs font-bold text-slate-700">Dinheiro</span>
             </button>
-            <button type="button" onclick="selectPaymentMethod('cartao')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center gap-1 transition" data-method="cartao">
+            <button type="button" onclick="selectPaymentMethod('debito')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="debito">
               <i class="ph ph-credit-card text-2xl text-blue-600"></i>
-              <span class="text-xs font-bold">Cartão</span>
+              <span class="text-xs font-bold text-slate-700">Débito</span>
+            </button>
+            <button type="button" onclick="selectPaymentMethod('credito')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition" data-method="credito">
+              <i class="ph ph-credit-card text-2xl text-purple-600"></i>
+              <span class="text-xs font-bold text-slate-700">Crédito</span>
             </button>
           </div>
         </div>
 
+        <!-- Painel Dinheiro (Cálculo de Troco Automático) -->
         <div id="cashPanel" class="hidden space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Recebido (R$)</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Recebido do Cliente (R$)</label>
             <input id="cashReceivedInput" type="number" step="0.5" placeholder="0,00" oninput="calculateChange()" class="w-full px-3 py-2 border rounded-lg text-base font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
           </div>
           <div class="flex justify-between items-center pt-1 text-sm">
@@ -490,9 +509,22 @@
           </div>
         </div>
 
+        <!-- Painel PIX -->
         <div id="pixPanel" class="hidden text-center p-3 bg-teal-50 rounded-xl border border-teal-200">
           <i class="ph ph-check-circle text-3xl text-teal-600"></i>
-          <p class="text-xs text-teal-800 font-medium mt-1">Aproxime o QR Code ou confirme o comprovante do cliente.</p>
+          <p class="text-xs text-teal-800 font-medium mt-1">Confirme o recebimento via chave ou QR Code PIX.</p>
+        </div>
+
+        <!-- Painel Cartão Débito -->
+        <div id="debitPanel" class="hidden text-center p-3 bg-blue-50 rounded-xl border border-blue-200">
+          <i class="ph ph-credit-card text-3xl text-blue-600"></i>
+          <p class="text-xs text-blue-800 font-medium mt-1">Insira ou aproxime o cartão na maquininha na opção <strong>DÉBITO</strong>.</p>
+        </div>
+
+        <!-- Painel Cartão Crédito -->
+        <div id="creditPanel" class="hidden text-center p-3 bg-purple-50 rounded-xl border border-purple-200">
+          <i class="ph ph-credit-card text-3xl text-purple-600"></i>
+          <p class="text-xs text-purple-800 font-medium mt-1">Insira ou aproxime o cartão na maquininha na opção <strong>CRÉDITO</strong>.</p>
         </div>
 
         <button onclick="confirmSale()" id="confirmSaleBtn" disabled class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-md transition">
@@ -505,7 +537,6 @@
 
   <!-- JAVASCRIPT: LÓGICA DE LICENCIAMENTO, SEGURANÇA E PDV -->
   <script>
-    // --- GERADOR DE CHAVE DE LICENÇA (XXXX-XXXX-XXXX-XXXX) ---
     function generateLicenseKey() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
       let key = '';
@@ -519,7 +550,6 @@
       return key;
     }
 
-    // Calcula data futura em YYYY-MM-DD
     function getDefaultExpiryDate(days = 30) {
       const d = new Date();
       d.setDate(d.getDate() + days);
@@ -529,7 +559,7 @@
     // --- BANCO DE DADOS LOCAL E PERSISTÊNCIA ---
     const DEFAULT_MASTER_PASSWORD = "admin123";
     let masterPassword = localStorage.getItem('app_master_pwd') || DEFAULT_MASTER_PASSWORD;
-    let isMasterAuthenticated = false; // Sessão master em memória
+    let isMasterAuthenticated = false;
 
     const DEFAULT_STORES = [
       {
@@ -540,7 +570,7 @@
         license: {
           key: generateLicenseKey(),
           expiryDate: getDefaultExpiryDate(60),
-          status: "ativa" // 'ativa' | 'bloqueada'
+          status: "ativa"
         },
         products: [
           { id: "p1", name: "Camiseta Oversized Algodão", barcode: "7891001", price: 79.90 },
@@ -582,7 +612,7 @@
 
       const today = new Date().toISOString().split('T')[0];
       if (store.license.expiryDate && store.license.expiryDate < today) {
-        return { valid: false, reason: `Licença expirou no dia ${store.license.expiryDate}. Faça a renovação com o administrador.` };
+        return { valid: false, reason: `Licença expirou em ${store.license.expiryDate}. Renove com a administração.` };
       }
 
       return { valid: true, reason: "" };
@@ -611,7 +641,6 @@
       }
     }
 
-    // --- CABEÇALHO DA LOJA ---
     function renderStoreHeader() {
       const store = getCurrentStore();
       document.getElementById('shopNameDisplay').innerText = store.name;
@@ -993,7 +1022,7 @@
       }
     });
 
-    // --- CHECKOUT & MODAL DE PAGAMENTO ---
+    // --- CHECKOUT & MODAL DE PAGAMENTO (INDIVIDUALIZADO) ---
     function openPaymentModal() {
       if (!enforceLicense() || cart.length === 0) return;
       const { total } = calculateCartTotals();
@@ -1018,9 +1047,13 @@
 
       const cashPanel = document.getElementById('cashPanel');
       const pixPanel = document.getElementById('pixPanel');
+      const debitPanel = document.getElementById('debitPanel');
+      const creditPanel = document.getElementById('creditPanel');
 
       cashPanel.classList.toggle('hidden', method !== 'dinheiro');
       pixPanel.classList.toggle('hidden', method !== 'pix');
+      debitPanel.classList.toggle('hidden', method !== 'debito');
+      creditPanel.classList.toggle('hidden', method !== 'credito');
 
       const confirmBtn = document.getElementById('confirmSaleBtn');
 
@@ -1064,7 +1097,7 @@
         subtotal: totals.subtotal,
         discount: totals.discountAmount,
         total: totals.total,
-        paymentMethod: selectedPayment,
+        paymentMethod: selectedPayment, // 'pix' | 'dinheiro' | 'debito' | 'credito'
         status: 'Concluída'
       };
 
@@ -1077,7 +1110,23 @@
       renderSalesHistory();
     }
 
-    // --- HISTÓRICO & FECHAMENTO DE CAIXA ---
+    // Retorna etiqueta e cor para cada método de pagamento
+    function getPaymentBadge(method) {
+      switch (method) {
+        case 'dinheiro':
+          return '<span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800">Dinheiro</span>';
+        case 'pix':
+          return '<span class="px-2 py-0.5 rounded text-xs font-bold bg-teal-100 text-teal-800">PIX</span>';
+        case 'debito':
+          return '<span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800">Cartão Débito</span>';
+        case 'credito':
+          return '<span class="px-2 py-0.5 rounded text-xs font-bold bg-purple-100 text-purple-800">Cartão Crédito</span>';
+        default:
+          return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800">${method}</span>`;
+      }
+    }
+
+    // --- HISTÓRICO & FECHAMENTO DE CAIXA (DETALHADO POR FORMA) ---
     function renderSalesHistory() {
       const store = getCurrentStore();
       const tbody = document.getElementById('salesTableBody');
@@ -1087,15 +1136,19 @@
       let count = 0;
       let cashTotal = 0;
       let pixTotal = 0;
-      let cardTotal = 0;
+      let debitTotal = 0;
+      let creditTotal = 0;
 
       store.sales.forEach(sale => {
         if (sale.status === 'Concluída') {
           totalFaturado += sale.total;
           count += 1;
           if (sale.paymentMethod === 'dinheiro') cashTotal += sale.total;
-          if (sale.paymentMethod === 'pix') pixTotal += sale.total;
-          if (sale.paymentMethod === 'cartao') cardTotal += sale.total;
+          else if (sale.paymentMethod === 'pix') pixTotal += sale.total;
+          else if (sale.paymentMethod === 'debito') debitTotal += sale.total;
+          else if (sale.paymentMethod === 'credito') creditTotal += sale.total;
+          // Retrocompatibilidade se tiver venda salva como 'cartao' antigo
+          else if (sale.paymentMethod === 'cartao') debitTotal += sale.total;
         }
 
         const dateStr = new Date(sale.timestamp).toLocaleString('pt-BR');
@@ -1107,7 +1160,7 @@
           <td class="p-3 font-mono font-bold text-xs">${sale.id}</td>
           <td class="p-3 text-xs">${dateStr}</td>
           <td class="p-3 max-w-xs truncate text-xs" title="${itemsSummary}">${itemsSummary}</td>
-          <td class="p-3 uppercase text-xs font-semibold">${sale.paymentMethod}</td>
+          <td class="p-3">${getPaymentBadge(sale.paymentMethod)}</td>
           <td class="p-3 font-bold text-slate-800">${formatBRL(sale.total)}</td>
           <td class="p-3">
             <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${sale.status === 'Concluída' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
@@ -1128,7 +1181,8 @@
       document.getElementById('boxCountSales').innerText = `${count} vendas válidas`;
       document.getElementById('boxCashSales').innerText = formatBRL(cashTotal);
       document.getElementById('boxPixSales').innerText = formatBRL(pixTotal);
-      document.getElementById('boxCardSales').innerText = formatBRL(cardTotal);
+      document.getElementById('boxDebitSales').innerText = formatBRL(debitTotal);
+      document.getElementById('boxCreditSales').innerText = formatBRL(creditTotal);
     }
 
     function cancelSale(saleId) {
@@ -1149,8 +1203,8 @@
       const confirmClose = confirm(
         `RELATÓRIO DE FECHAMENTO DE CAIXA:\n` +
         `Loja: ${store.name}\n` +
-        `Total Vendas Ativas: ${formatBRL(total)}\n\n` +
-        `Deseja fechar o caixa e arquivar este turno?`
+        `Total Faturado no Turno: ${formatBRL(total)}\n\n` +
+        `Deseja fechar o caixa e limpar os registros para abertura do próximo turno?`
       );
 
       if (confirmClose) {
@@ -1283,7 +1337,7 @@
       }
     }
 
-    // Atalhos
+    // Atalhos do PDV
     window.addEventListener('keydown', (e) => {
       if (e.key === 'F2') {
         e.preventDefault();
@@ -1298,7 +1352,6 @@
 
     // --- INICIALIZAÇÃO ---
     function initApp() {
-      // Garante licença para lojas antigas migradas
       stores.forEach(s => {
         if (!s.license) {
           s.license = {
