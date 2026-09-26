@@ -69,7 +69,7 @@
           <i class="ph ph-cash-register text-lg"></i> Caixa
         </button>
         <button onclick="switchView('produtos')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="produtos">
-          <i class="ph ph-package text-lg"></i> Produtos
+          <i class="ph ph-package text-lg"></i> Produtos & Categorias
         </button>
         <button onclick="switchView('historico')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="historico">
           <i class="ph ph-receipt text-lg"></i> Caixa & Lucro
@@ -110,8 +110,10 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
         
-        <!-- Esquerda: Busca e Catálogo -->
+        <!-- Esquerda: Busca, Filtros de Categorias e Catálogo -->
         <div id="pdvCatalogColumn" class="lg:col-span-7 flex flex-col gap-3">
+          
+          <!-- Barra de Busca -->
           <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200">
             <label class="block text-[11px] sm:text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Busca / Leitor de Código de Barras (Enter)</label>
             <div class="relative">
@@ -126,9 +128,22 @@
             </div>
           </div>
 
+          <!-- Filtro de Categorias no PDV (Chips Deslizáveis) -->
+          <div class="bg-white p-2.5 sm:p-3 rounded-xl shadow-sm border border-slate-200">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <i class="ph ph-tag text-indigo-600"></i> Filtrar por Categoria:
+              </span>
+            </div>
+            <div id="pdvCategoryChips" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+
+          <!-- Grade de Produtos -->
           <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col">
             <div class="flex justify-between items-center mb-3">
-              <h2 class="font-bold text-sm sm:text-base text-slate-700">Catálogo de Produtos</h2>
+              <h2 class="font-bold text-sm sm:text-base text-slate-700">Catálogo de Produtos & Serviços</h2>
               <span id="productCounterBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">0 itens</span>
             </div>
             <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
@@ -203,18 +218,26 @@
 
     </section>
 
-    <!-- VIEW: PRODUTOS (COM UPLOAD DE IMAGEM E PREÇO DE CUSTO PARA LUCRO) -->
+    <!-- VIEW: PRODUTOS & GESTÃO DE CATEGORIAS -->
     <section id="view-produtos" class="view-panel hidden space-y-4">
+      
+      <!-- Cadastro de Produtos/Serviços -->
       <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h2 class="text-base sm:text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
-          <i class="ph ph-plus-circle text-indigo-600 text-xl"></i> Cadastrar / Atualizar Produto
-        </h2>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b mb-3 gap-2">
+          <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i class="ph ph-plus-circle text-indigo-600 text-xl"></i> Cadastrar / Atualizar Item
+          </h2>
+          <button type="button" onclick="promptCreateNewCategory()" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 w-fit">
+            <i class="ph ph-folder-plus text-base"></i> + Nova Categoria
+          </button>
+        </div>
+
         <form id="productForm" onsubmit="handleProductSubmit(event)" class="space-y-4">
           <input type="hidden" id="prodEditId">
 
           <!-- Upload da Foto do Produto -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Foto do Produto (Arquivos do dispositivo)</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Foto do Item (Arquivos do dispositivo)</label>
             <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
               <div class="w-16 h-16 rounded-xl bg-white border border-slate-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
                 <img id="prodImagePreview" src="" alt="Foto" class="hidden w-full h-full object-cover">
@@ -237,38 +260,68 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Produto</label>
-              <input id="prodName" type="text" required placeholder="Ex: Camiseta Básica Algodão" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Produto ou Serviço</label>
+              <input id="prodName" type="text" required placeholder="Ex: Camiseta Básica ou Corte Masculino" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
             </div>
+
+            <!-- Seleção de Categoria com Botão Inline de Adicionar -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="block text-xs font-semibold text-slate-600">Categoria</label>
+                <button type="button" onclick="promptCreateNewCategory()" class="text-[10px] text-indigo-600 hover:underline font-bold">+ Criar</button>
+              </div>
+              <select id="prodCategorySelect" required class="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                <!-- Preenchido via JS -->
+              </select>
+            </div>
+
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Código / SKU / Barras</label>
               <input id="prodBarcode" type="text" required placeholder="Ex: 789123456789" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
             </div>
+
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Preço de Custo (R$)</label>
               <input id="prodCostPrice" type="number" step="0.01" min="0" placeholder="0,00 (Para cálculo de lucro)" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
             </div>
+
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Preço de Venda (R$)</label>
               <input id="prodPrice" type="number" step="0.01" min="0.01" required placeholder="0,00" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
             </div>
-            <div class="sm:col-span-2 md:col-span-3 flex justify-end items-end gap-2 pt-1">
+
+            <div class="sm:col-span-2 flex justify-end items-end gap-2 pt-1">
               <button type="button" onclick="resetProductForm()" class="px-4 py-2 text-xs sm:text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
-              <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow">Salvar Produto</button>
+              <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow">Salvar Item</button>
             </div>
           </div>
         </form>
       </div>
 
+      <!-- Gerenciador de Categorias Cadastradas -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-bold text-xs sm:text-sm text-slate-800 flex items-center gap-1.5">
+            <i class="ph ph-folders text-indigo-600 text-base"></i> Categorias da Loja
+          </h3>
+          <span class="text-[11px] text-slate-400">Clique no 'x' para excluir uma categoria</span>
+        </div>
+        <div id="categoryTagsContainer" class="flex flex-wrap gap-2 pt-1">
+          <!-- Renderizado via JS -->
+        </div>
+      </div>
+
+      <!-- Tabela de Itens Cadastrados -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-3 sm:p-4 border-b border-slate-100">
           <h3 class="font-bold text-sm sm:text-base text-slate-800">Catálogo de Itens Cadastrados</h3>
         </div>
         <div class="overflow-x-auto no-scrollbar">
-          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[550px]">
+          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[600px]">
             <thead class="bg-slate-50 border-b text-[10px] sm:text-xs uppercase text-slate-500">
               <tr>
                 <th class="p-3">Item</th>
+                <th class="p-3">Categoria</th>
                 <th class="p-3">Código</th>
                 <th class="p-3">Custo</th>
                 <th class="p-3">Venda</th>
@@ -688,7 +741,7 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT: LÓGICA GERAL & CÁLCULO DE LUCRO -->
+  <!-- JAVASCRIPT: LÓGICA GERAL & GESTÃO DE CATEGORIAS -->
   <script>
     function generateLicenseKey() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -709,7 +762,6 @@
       return d.toISOString().split('T')[0];
     }
 
-    // Helper: comprime imagem em canvas para não estourar localStorage
     function compressImageFile(file, maxDimension, quality, callback) {
       const reader = new FileReader();
       reader.onload = function(event) {
@@ -754,16 +806,17 @@
         name: "Boutique Elegance",
         segment: "Moda",
         logo: "",
+        categories: ["Roupas", "Calçados", "Acessórios", "Serviços de Ajuste"],
         license: {
           key: generateLicenseKey(),
           expiryDate: getDefaultExpiryDate(60),
           status: "ativa"
         },
         products: [
-          { id: "p1", name: "Camiseta Oversized Algodão", barcode: "7891001", costPrice: 35.00, price: 79.90, image: "" },
-          { id: "p2", name: "Calça Jeans Slim Fit", barcode: "7891002", costPrice: 70.00, price: 159.00, image: "" },
-          { id: "p3", name: "Vestido Midi Floral", barcode: "7891003", costPrice: 85.00, price: 189.90, image: "" },
-          { id: "p4", name: "Tênis Casual Branco", barcode: "7891004", costPrice: 95.00, price: 219.00, image: "" }
+          { id: "p1", name: "Camiseta Oversized Algodão", category: "Roupas", barcode: "7891001", costPrice: 35.00, price: 79.90, image: "" },
+          { id: "p2", name: "Calça Jeans Slim Fit", category: "Roupas", barcode: "7891002", costPrice: 70.00, price: 159.00, image: "" },
+          { id: "p3", name: "Vestido Midi Floral", category: "Roupas", barcode: "7891003", costPrice: 85.00, price: 189.90, image: "" },
+          { id: "p4", name: "Tênis Casual Branco", category: "Calçados", barcode: "7891004", costPrice: 95.00, price: 219.00, image: "" }
         ],
         sales: []
       }
@@ -775,8 +828,8 @@
     let appliedDiscount = { type: 'fixed', value: 0 };
     let selectedPayment = null;
     let currentMobilePdvTab = 'catalog';
+    let selectedPdvCategory = 'all'; // Categoria ativa no filtro do PDV
 
-    // Imagens temporárias
     let tempUploadedLogoBase64 = "";
     let tempUploadedProductImageBase64 = "";
 
@@ -794,7 +847,133 @@
       return (Number(val) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // --- UPLOAD DA LOGO DA LOJA ---
+    // --- GESTÃO DE CATEGORIAS ---
+    function ensureStoreCategories(store) {
+      if (!store.categories || !Array.isArray(store.categories) || store.categories.length === 0) {
+        store.categories = ["Geral", "Produtos", "Serviços"];
+      }
+    }
+
+    function renderCategorySelectors(selectedCategory = '') {
+      const store = getCurrentStore();
+      ensureStoreCategories(store);
+
+      // 1. Preenche o select do formulário de produto
+      const prodCatSelect = document.getElementById('prodCategorySelect');
+      prodCatSelect.innerHTML = '';
+      store.categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.innerText = cat;
+        if (cat === selectedCategory) opt.selected = true;
+        prodCatSelect.appendChild(opt);
+      });
+
+      // 2. Preenche os chips de tags na aba produtos
+      const tagsContainer = document.getElementById('categoryTagsContainer');
+      tagsContainer.innerHTML = '';
+      store.categories.forEach(cat => {
+        const count = store.products.filter(p => p.category === cat).length;
+        const tag = document.createElement('div');
+        tag.className = "flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700";
+        tag.innerHTML = `
+          <span>${cat}</span>
+          <span class="text-[10px] bg-slate-300 text-slate-800 px-1.5 py-0.2 rounded-full font-bold">${count}</span>
+          ${store.categories.length > 1 ? `<button type="button" onclick="deleteCategory('${cat}')" class="text-slate-400 hover:text-rose-600 font-bold ml-1 text-sm leading-none">&times;</button>` : ''}
+        `;
+        tagsContainer.appendChild(tag);
+      });
+
+      // 3. Preenche os chips de filtro no PDV
+      renderPdvCategoryChips();
+    }
+
+    function renderPdvCategoryChips() {
+      const store = getCurrentStore();
+      ensureStoreCategories(store);
+      const container = document.getElementById('pdvCategoryChips');
+      container.innerHTML = '';
+
+      // Botão "Todos"
+      const allBtn = document.createElement('button');
+      allBtn.type = 'button';
+      const isAllActive = selectedPdvCategory === 'all';
+      allBtn.className = `px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${
+        isAllActive ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+      }`;
+      allBtn.innerText = `Todos (${store.products.length})`;
+      allBtn.onclick = () => {
+        selectedPdvCategory = 'all';
+        renderPdvCategoryChips();
+        renderPdvProducts(document.getElementById('barcodeSearchInput').value);
+      };
+      container.appendChild(allBtn);
+
+      // Botões para cada categoria existente
+      store.categories.forEach(cat => {
+        const catCount = store.products.filter(p => p.category === cat).length;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isActive = selectedPdvCategory === cat;
+        btn.className = `px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-1 ${
+          isActive ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+        }`;
+        btn.innerText = `${cat} (${catCount})`;
+        btn.onclick = () => {
+          selectedPdvCategory = cat;
+          renderPdvCategoryChips();
+          renderPdvProducts(document.getElementById('barcodeSearchInput').value);
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function promptCreateNewCategory() {
+      const name = prompt("Nome da nova categoria (ex: Camisas, Cosméticos, Sobremesas, Serviços, etc):");
+      if (!name || name.trim() === '') return;
+
+      const trimmedName = name.trim();
+      const store = getCurrentStore();
+      ensureStoreCategories(store);
+
+      if (store.categories.some(c => c.toLowerCase() === trimmedName.toLowerCase())) {
+        alert("Esta categoria já existe!");
+        return;
+      }
+
+      store.categories.push(trimmedName);
+      saveState();
+      renderCategorySelectors(trimmedName);
+      alert(`Categoria "${trimmedName}" criada com sucesso!`);
+    }
+
+    function deleteCategory(catName) {
+      const store = getCurrentStore();
+      const linkedCount = store.products.filter(p => p.category === catName).length;
+
+      const msg = linkedCount > 0 
+        ? `Existem ${linkedCount} item(ns) vinculados a "${catName}". Deseja remover a categoria e mover esses itens para "Geral"?`
+        : `Deseja excluir a categoria "${catName}"?`;
+
+      if (!confirm(msg)) return;
+
+      store.categories = store.categories.filter(c => c !== catName);
+      if (!store.categories.includes("Geral")) store.categories.unshift("Geral");
+
+      // Atualiza produtos que estavam nessa categoria
+      store.products.forEach(p => {
+        if (p.category === catName) p.category = "Geral";
+      });
+
+      if (selectedPdvCategory === catName) selectedPdvCategory = 'all';
+
+      saveState();
+      renderCategorySelectors();
+      renderProductsTable();
+      renderPdvProducts();
+    }
+
+    // --- UPLOADS: LOGO & PRODUTO ---
     function handleLogoFileSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -829,7 +1008,6 @@
       updateLogoPreviewUI("");
     }
 
-    // --- UPLOAD DA FOTO DO PRODUTO ---
     function handleProductImageSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1138,6 +1316,7 @@
 
     function switchToStore(storeId) {
       currentStoreId = storeId;
+      selectedPdvCategory = 'all';
       saveState();
       initApp();
       switchView('pdv');
@@ -1154,6 +1333,7 @@
         name: name.trim(),
         segment: segment || "Comércio Geral",
         logo: "",
+        categories: ["Geral", "Produtos", "Serviços"],
         license: {
           key: generateLicenseKey(),
           expiryDate: getDefaultExpiryDate(days),
@@ -1165,27 +1345,33 @@
 
       stores.push(newStore);
       currentStoreId = newStore.id;
+      selectedPdvCategory = 'all';
       saveState();
       initApp();
       renderMasterDashboard();
       alert(`Loja "${name}" criada com sucesso!`);
     }
 
-    // --- CATÁLOGO & FRENTE DE CAIXA (PDV COM IMAGENS NOS PRODUTOS) ---
+    // --- CATÁLOGO & FRENTE DE CAIXA (PDV COM FILTRO DE CATEGORIAS) ---
     function renderPdvProducts(filter = '') {
       const store = getCurrentStore();
       const grid = document.getElementById('productGrid');
       grid.innerHTML = '';
 
-      const filtered = store.products.filter(p => 
+      let filtered = store.products.filter(p => 
         p.name.toLowerCase().includes(filter.toLowerCase()) || 
         p.barcode.includes(filter)
       );
 
+      // Filtro por categoria
+      if (selectedPdvCategory !== 'all') {
+        filtered = filtered.filter(p => p.category === selectedPdvCategory);
+      }
+
       document.getElementById('productCounterBadge').innerText = `${filtered.length} itens`;
 
       if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-xs sm:text-sm">Nenhum produto localizado.</div>`;
+        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-xs sm:text-sm">Nenhum item localizado nesta categoria.</div>`;
         return;
       }
 
@@ -1194,7 +1380,6 @@
         card.className = "p-2 sm:p-2.5 border border-slate-200 rounded-xl hover:border-indigo-500 hover:shadow-sm transition bg-white flex flex-col justify-between cursor-pointer group active:scale-[0.98]";
         card.onclick = () => addToCart(p);
 
-        // Thumbnail do produto
         const imgHtml = p.image && p.image.trim() !== '' 
           ? `<img src="${p.image}" class="w-full h-24 sm:h-28 object-cover rounded-lg mb-2 border border-slate-100">`
           : `<div class="w-full h-24 sm:h-28 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center text-slate-300 mb-2"><i class="ph ph-package text-3xl"></i></div>`;
@@ -1202,7 +1387,10 @@
         card.innerHTML = `
           <div>
             ${imgHtml}
-            <span class="text-[9px] sm:text-[10px] text-slate-400 font-mono block">#${p.barcode}</span>
+            <div class="flex items-center justify-between gap-1 mb-0.5">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 font-mono block">#${p.barcode}</span>
+              <span class="text-[9px] bg-indigo-50 text-indigo-700 px-1.5 py-0.2 rounded font-semibold truncate max-w-[80px]">${p.category || 'Geral'}</span>
+            </div>
             <h4 class="font-bold text-xs sm:text-sm text-slate-700 group-hover:text-indigo-600 line-clamp-2 mt-0.5 leading-tight">${p.name}</h4>
           </div>
           <div class="mt-2 flex justify-between items-center pt-1 border-t border-slate-50">
@@ -1222,7 +1410,6 @@
       if (existing) {
         existing.qty += 1;
       } else {
-        // Garante costPrice mesmo se nulo
         cart.push({ 
           product: {
             ...product,
@@ -1303,6 +1490,7 @@
               ${imgThumbnail}
               <div class="min-w-0">
                 <span class="font-bold text-slate-800 block truncate">${item.product.name}</span>
+                <span class="text-[10px] text-indigo-600 font-semibold block leading-tight">${item.product.category || 'Geral'}</span>
                 <span class="text-slate-500 font-medium">${formatBRL(item.product.price)} un.</span>
               </div>
             </div>
@@ -1419,7 +1607,6 @@
       const store = getCurrentStore();
       const totals = calculateCartTotals();
 
-      // Calcula custo total dos produtos vendidos para registrar lucro
       const totalCost = cart.reduce((acc, item) => {
         const itemCost = item.product.costPrice || 0;
         return acc + (itemCost * item.qty);
@@ -1469,7 +1656,7 @@
       }
     }
 
-    // --- HISTÓRICO, TOTAL DE VENDAS & CÁLCULO DE LUCRO DO DIA ---
+    // --- HISTÓRICO, TOTAL DE VENDAS & LUCRO DO DIA ---
     function renderSalesHistory() {
       const store = getCurrentStore();
       const tbody = document.getElementById('salesTableBody');
@@ -1482,7 +1669,6 @@
       let debitTotal = 0;
       let creditTotal = 0;
 
-      // Métricas específicas de HOJE
       const todayDateStr = new Date().toISOString().split('T')[0];
       let todayTotal = 0;
       let todayProfit = 0;
@@ -1502,12 +1688,10 @@
           else if (sale.paymentMethod === 'credito') creditTotal += sale.total;
           else if (sale.paymentMethod === 'cartao') debitTotal += sale.total;
 
-          // Se a venda ocorreu hoje
           if (saleDate === todayDateStr) {
             todayTotal += sale.total;
             todayCount += 1;
 
-            // Recalcula lucro se não estiver gravado
             let saleProfit = sale.profit;
             if (saleProfit === undefined) {
               const saleCost = (sale.items || []).reduce((acc, item) => acc + ((item.product.costPrice || 0) * item.qty), 0);
@@ -1543,7 +1727,6 @@
         tbody.appendChild(tr);
       });
 
-      // Atualiza cards do Dia
       document.getElementById('todayTotalSales').innerText = formatBRL(todayTotal);
       document.getElementById('todayProfitSales').innerText = formatBRL(todayProfit);
       document.getElementById('todayCountSales').innerText = `${todayCount} venda(s) realizada(s) hoje`;
@@ -1551,7 +1734,6 @@
       const marginPercent = todayTotal > 0 ? ((todayProfit / todayTotal) * 100).toFixed(1) : 0;
       document.getElementById('todayProfitMarginBadge').innerText = `Margem de Lucro: ${marginPercent}%`;
 
-      // Atualiza cards gerais do caixa
       document.getElementById('boxTotalSales').innerText = formatBRL(totalFaturado);
       document.getElementById('boxCountSales').innerText = `${count} vendas acumuladas`;
       document.getElementById('boxCashSales').innerText = formatBRL(cashTotal);
@@ -1593,7 +1775,7 @@
       }
     }
 
-    // --- GESTÃO DE PRODUTOS (COM FOTO E PREÇO DE CUSTO) ---
+    // --- GESTÃO DE PRODUTOS & SERVIÇOS ---
     function renderProductsTable() {
       const store = getCurrentStore();
       const tbody = document.getElementById('productsTableBody');
@@ -1614,6 +1796,11 @@
               <span class="font-bold text-slate-800">${p.name}</span>
             </div>
           </td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-md text-xs font-semibold">
+              ${p.category || 'Geral'}
+            </span>
+          </td>
           <td class="p-3 font-mono text-xs">${p.barcode}</td>
           <td class="p-3 text-slate-600">${cost}</td>
           <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${formatBRL(p.price)}</td>
@@ -1631,6 +1818,7 @@
       const store = getCurrentStore();
       const editId = document.getElementById('prodEditId').value;
       const name = document.getElementById('prodName').value.trim();
+      const category = document.getElementById('prodCategorySelect').value || "Geral";
       const barcode = document.getElementById('prodBarcode').value.trim();
       const costPrice = parseFloat(document.getElementById('prodCostPrice').value) || 0;
       const price = parseFloat(document.getElementById('prodPrice').value);
@@ -1639,6 +1827,7 @@
         const prod = store.products.find(p => p.id === editId);
         if (prod) {
           prod.name = name;
+          prod.category = category;
           prod.barcode = barcode;
           prod.costPrice = costPrice;
           prod.price = price;
@@ -1648,6 +1837,7 @@
         store.products.push({ 
           id: "prod_" + Date.now(), 
           name, 
+          category,
           barcode, 
           costPrice, 
           price, 
@@ -1657,6 +1847,7 @@
 
       saveState();
       resetProductForm();
+      renderCategorySelectors();
       renderProductsTable();
       renderPdvProducts();
     }
@@ -1672,6 +1863,8 @@
       document.getElementById('prodCostPrice').value = prod.costPrice || '';
       document.getElementById('prodPrice').value = prod.price;
 
+      renderCategorySelectors(prod.category || 'Geral');
+
       tempUploadedProductImageBase64 = prod.image || "";
       updateProductImagePreviewUI(tempUploadedProductImageBase64);
 
@@ -1679,10 +1872,11 @@
     }
 
     function deleteProduct(id) {
-      if (!confirm("Remover este produto do estoque?")) return;
+      if (!confirm("Remover este item do catálogo?")) return;
       const store = getCurrentStore();
       store.products = store.products.filter(p => p.id !== id);
       saveState();
+      renderCategorySelectors();
       renderProductsTable();
       renderPdvProducts();
     }
@@ -1691,6 +1885,7 @@
       document.getElementById('productForm').reset();
       document.getElementById('prodEditId').value = '';
       removeProductImage();
+      renderCategorySelectors();
     }
 
     // --- CONFIGURAÇÃO DA LOJA (PERSONALIZAÇÃO) ---
@@ -1744,9 +1939,11 @@
       });
 
       if (viewName === 'pdv') {
+        renderPdvCategoryChips();
         renderPdvProducts();
         updateMobileFloatingBar();
       } else if (viewName === 'produtos') {
+        renderCategorySelectors();
         renderProductsTable();
       } else if (viewName === 'historico') {
         renderSalesHistory();
@@ -1790,15 +1987,17 @@
             status: "ativa"
           };
         }
-        // Migração para produtos com fotos e custo
+        ensureStoreCategories(s);
         s.products.forEach(p => {
           if (p.costPrice === undefined) p.costPrice = 0;
           if (p.image === undefined) p.image = "";
+          if (!p.category) p.category = s.categories[0] || "Geral";
         });
       });
       saveState();
 
       renderStoreHeader();
+      renderCategorySelectors();
       renderPdvProducts();
       renderCart();
 
