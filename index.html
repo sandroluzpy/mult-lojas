@@ -31,7 +31,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col pb-20 md:pb-6">
 
-  <!-- TELA DE ATIVAÇÃO DE DISPOSITIVO (QUANDO O CLIENTE ABRE O LINK PELA PRIMEIRA VEZ SEM VÍNCULO) -->
+  <!-- TELA DE ATIVAÇÃO DE DISPOSITIVO -->
   <div id="deviceActivationModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white max-w-md w-full p-6 sm:p-7 rounded-2xl shadow-2xl text-center border border-slate-200 animate-in fade-in zoom-in duration-200">
       <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -110,30 +110,40 @@
         </div>
       </div>
 
-      <!-- Navegação Desktop -->
-      <nav class="hidden md:flex items-center gap-1.5">
-        <button onclick="switchView('pdv')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 transition" data-view="pdv">
-          <i class="ph ph-cash-register text-lg"></i> Caixa
-        </button>
-        <button onclick="switchView('produtos')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="produtos">
-          <i class="ph ph-package text-lg"></i> Produtos & Categorias
-        </button>
-        <button onclick="switchView('historico')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="historico">
-          <i class="ph ph-receipt text-lg"></i> Caixa & Lucro
-        </button>
-        <button onclick="switchView('config')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="config">
-          <i class="ph ph-gear text-lg"></i> Minha Loja
-        </button>
-        <button onclick="handleMasterButtonClick()" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 transition" data-view="master">
-          <i class="ph ph-crown text-lg"></i> Master ADM
-        </button>
-      </nav>
+      <!-- Seletor de Operador Ativo (Topo) -->
+      <div class="flex items-center gap-2">
+        <div class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 flex items-center gap-1.5 text-xs">
+          <i class="ph ph-user text-indigo-400"></i>
+          <select id="activeOperatorSelect" onchange="changeActiveOperator(this.value)" class="bg-transparent text-white text-xs font-semibold outline-none cursor-pointer max-w-[110px] sm:max-w-[140px] truncate">
+            <option value="">Sem operador</option>
+          </select>
+        </div>
 
-      <!-- Botão Master Mobile -->
-      <div class="md:hidden flex items-center">
-        <button onclick="handleMasterButtonClick()" class="p-2 bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/30 text-xs font-bold flex items-center gap-1">
-          <i class="ph ph-crown text-base"></i> Master
-        </button>
+        <!-- Navegação Desktop -->
+        <nav class="hidden md:flex items-center gap-1.5">
+          <button onclick="switchView('pdv')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 transition" data-view="pdv">
+            <i class="ph ph-cash-register text-lg"></i> Caixa
+          </button>
+          <button onclick="switchView('produtos')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="produtos">
+            <i class="ph ph-package text-lg"></i> Produtos
+          </button>
+          <button onclick="switchView('historico')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="historico">
+            <i class="ph ph-receipt text-lg"></i> Caixa & Lucro
+          </button>
+          <button onclick="switchView('config')" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition" data-view="config">
+            <i class="ph ph-gear text-lg"></i> Minha Loja
+          </button>
+          <button onclick="handleMasterButtonClick()" class="nav-btn-desktop px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 transition" data-view="master">
+            <i class="ph ph-crown text-lg"></i> Master ADM
+          </button>
+        </nav>
+
+        <!-- Botão Master Mobile -->
+        <div class="md:hidden flex items-center">
+          <button onclick="handleMasterButtonClick()" class="p-2 bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/30 text-xs font-bold flex items-center gap-1">
+            <i class="ph ph-crown text-base"></i> Master
+          </button>
+        </div>
       </div>
     </div>
   </header>
@@ -446,10 +456,11 @@
 
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="overflow-x-auto no-scrollbar">
-          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[620px]">
+          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[700px]">
             <thead class="bg-slate-50 border-b text-[10px] sm:text-xs uppercase text-slate-500">
               <tr>
                 <th class="p-3">ID</th>
+                <th class="p-3">Operador</th>
                 <th class="p-3">Data/Hora</th>
                 <th class="p-3">Itens</th>
                 <th class="p-3">Pagamento</th>
@@ -464,8 +475,10 @@
       </div>
     </section>
 
-    <!-- VIEW: MINHA LOJA (CONFIGURAÇÃO) -->
+    <!-- VIEW: MINHA LOJA (CONFIGURAÇÃO & GESTÃO DE ATÉ 3 OPERADORES) -->
     <section id="view-config" class="view-panel hidden max-w-2xl mx-auto space-y-4">
+      
+      <!-- Card: Dados da Loja -->
       <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-slate-800">Personalização da Loja</h2>
@@ -522,12 +535,56 @@
         </form>
       </div>
 
+      <!-- Card: Gestão de Operadores (Limite de 3 Usuários) -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-3">
+          <div>
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i class="ph ph-users-three text-indigo-600 text-xl"></i> Usuários & Operadores da Loja
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Cadastre até 3 operadores com PIN de 4 dígitos para controle de vendas.</p>
+          </div>
+          <span id="operatorLimitBadge" class="text-xs font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg">
+            0 / 3 usuários
+          </span>
+        </div>
+
+        <!-- Formulário Adicionar Operador -->
+        <form id="operatorAddForm" onsubmit="handleAddOperator(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nome do Operador</label>
+            <input id="newOpName" type="text" required placeholder="Ex: João Silva" class="w-full px-2.5 py-1.5 border rounded-lg text-xs bg-white outline-none focus:ring-1 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Função / Cargo</label>
+            <select id="newOpRole" class="w-full px-2.5 py-1.5 border rounded-lg text-xs bg-white outline-none focus:ring-1 focus:ring-indigo-500">
+              <option value="Caixa">Operador de Caixa</option>
+              <option value="Gerente">Gerente</option>
+              <option value="Atendente">Atendente</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">PIN (4 dígitos)</label>
+            <div class="flex gap-1.5">
+              <input id="newOpPin" type="password" maxlength="4" pattern="[0-9]{4}" required placeholder="1234" class="w-full px-2.5 py-1.5 border rounded-lg text-xs bg-white outline-none text-center font-mono font-bold focus:ring-1 focus:ring-indigo-500">
+              <button id="addOpSubmitBtn" type="submit" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold whitespace-nowrap shadow-sm">
+                + Add
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Lista de Operadores Cadastrados -->
+        <div id="operatorsListContainer" class="space-y-2"></div>
+      </div>
+
+      <!-- Card: Licença -->
       <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 text-sm space-y-2">
         <h3 class="font-bold text-slate-800 flex items-center gap-2">
           <i class="ph ph-key text-indigo-600"></i> Informações da Licença Desta Loja
         </h3>
         <p class="text-xs text-slate-500">Chave exclusiva registrada para operação neste dispositivo.</p>
-        <div class="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div>
             <span class="text-slate-400 block font-semibold uppercase">Chave de Licença:</span>
             <span id="currentLicenseKeyText" class="font-mono font-bold text-slate-700 break-all">----</span>
@@ -536,11 +593,15 @@
             <span class="text-slate-400 block font-semibold uppercase">Válida Até:</span>
             <span id="currentLicenseExpiryText" class="font-bold text-slate-700">--/--/----</span>
           </div>
+          <div>
+            <span class="text-slate-400 block font-semibold uppercase">Limite de Usuários:</span>
+            <span id="currentLicenseMaxUsersText" class="font-bold text-slate-700">3 usuários</span>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- VIEW: PAINEL MASTER ADM (COM BOTÃO COPIAR LINK DO CLIENTE) -->
+    <!-- VIEW: PAINEL MASTER ADM -->
     <section id="view-master" class="view-panel hidden space-y-4">
       <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 sm:p-6 rounded-2xl text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -549,7 +610,7 @@
             <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">Autenticado</span>
           </div>
           <h2 class="text-xl sm:text-2xl font-black mt-1">Gestão Central & Licenciamento</h2>
-          <p class="text-xs text-slate-300 mt-0.5">Controle global de lojistas, chaves e faturamento sincronizados na nuvem.</p>
+          <p class="text-xs text-slate-300 mt-0.5">Controle global de lojistas, limites de usuários e faturamento na nuvem.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <button onclick="changeMasterPasswordPrompt()" class="flex-1 sm:flex-none px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 border border-slate-700">
@@ -588,11 +649,12 @@
           <h3 class="font-bold text-sm sm:text-base text-slate-800">Controle de Lojas e Licenciamento</h3>
         </div>
         <div class="overflow-x-auto no-scrollbar">
-          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[780px]">
+          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[820px]">
             <thead class="bg-slate-50 border-b text-[10px] sm:text-xs uppercase text-slate-500">
               <tr>
                 <th class="p-3">Loja</th>
                 <th class="p-3">Segmento</th>
+                <th class="p-3">Usuários</th>
                 <th class="p-3">Chave de Licença</th>
                 <th class="p-3">Validade</th>
                 <th class="p-3">Status</th>
@@ -682,9 +744,15 @@
           <input id="licenseKeyInput" type="text" required class="w-full px-3 py-2 border rounded-lg font-mono text-xs sm:text-sm uppercase font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Expiração</label>
-          <input id="licenseExpiryInput" type="date" required class="w-full px-3 py-2 border rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Expiração</label>
+            <input id="licenseExpiryInput" type="date" required class="w-full px-3 py-2 border rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Limite Usuários</label>
+            <input id="licenseMaxUsersInput" type="number" min="1" max="20" required class="w-full px-3 py-2 border rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
         </div>
 
         <div>
@@ -703,7 +771,7 @@
     </div>
   </div>
 
-  <!-- MODAL: FINALIZAR VENDA -->
+  <!-- MODAL: FINALIZAR VENDA (COM CONFIRMAÇÃO DE OPERADOR) -->
   <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in slide-in-from-bottom sm:zoom-in duration-200">
       
@@ -716,7 +784,10 @@
 
       <div class="p-4 sm:p-5 space-y-3.5">
         <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex justify-between items-center">
-          <span class="text-xs sm:text-sm font-semibold text-indigo-900">Total a Cobrar:</span>
+          <div>
+            <span class="text-xs sm:text-sm font-semibold text-indigo-900 block">Total a Cobrar:</span>
+            <span id="modalOperatorInfo" class="text-[11px] text-indigo-700 font-medium">Operador: Caixa Geral</span>
+          </div>
           <span id="modalPayableTotal" class="text-xl sm:text-2xl font-black text-indigo-700">R$ 0,00</span>
         </div>
 
@@ -779,7 +850,7 @@
   <!-- JAVASCRIPT: LÓGICA GERAL & FIRESTORE -->
   <script>
     // =========================================================================
-    // CONFIGURAÇÃO DO FIREBASE (SUAS CREDENCIAIS REAIS)
+    // CONFIGURAÇÃO DO FIREBASE
     // =========================================================================
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyCurtRDF7xWbr08pam8cICEv5fQ6-FTmJI",
@@ -810,7 +881,7 @@
         } catch (e) {
           console.error("Erro ao iniciar Firebase:", e);
           isCloudActive = false;
-          setCloudStatusUI('error', 'Falha na Nuvem (Usando Local)');
+          setCloudStatusUI('error', 'Falha na Nuvem (Local)');
         }
       }
     }
@@ -841,10 +912,8 @@
           });
           stores = cloudStores;
 
-          // Se a URL tiver o parâmetro ?loja=...
           checkUrlParameters();
 
-          // Se não houver loja válida vinculada neste aparelho, exibe tela de ativação
           if (!currentStoreId || !stores.some(s => s.id === currentStoreId)) {
             showDeviceActivationModal();
             return;
@@ -856,6 +925,7 @@
           localStorage.setItem('app_current_store', currentStoreId);
 
           renderStoreHeader();
+          renderOperatorsUI();
           renderPdvCategoryChips();
           renderPdvProducts(document.getElementById('barcodeSearchInput')?.value || '');
           renderCart();
@@ -976,8 +1046,12 @@
         license: {
           key: generateLicenseKey(),
           expiryDate: getDefaultExpiryDate(365),
-          status: "ativa"
+          status: "ativa",
+          maxUsers: 3
         },
+        operators: [
+          { id: "op_1", name: "Administrador", role: "Gerente", pin: "1234" }
+        ],
         products: [],
         sales: []
       }
@@ -985,6 +1059,8 @@
 
     let stores = JSON.parse(localStorage.getItem('app_stores')) || DEFAULT_STORES;
     let currentStoreId = localStorage.getItem('app_current_store') || null;
+    let activeOperatorId = localStorage.getItem('app_active_operator') || null;
+
     let cart = [];
     let appliedDiscount = { type: 'fixed', value: 0 };
     let selectedPayment = null;
@@ -1007,7 +1083,6 @@
         if (found) {
           currentStoreId = found.id;
           localStorage.setItem('app_current_store', currentStoreId);
-          // Limpa a URL da barra para ficar esteticamente limpo
           window.history.replaceState({}, document.title, window.location.pathname);
           hideDeviceActivationModal();
           return;
@@ -1046,6 +1121,7 @@
         localStorage.setItem('app_current_store', currentStoreId);
         hideDeviceActivationModal();
         renderStoreHeader();
+        renderOperatorsUI();
         renderPdvCategoryChips();
         renderPdvProducts();
         renderCart();
@@ -1063,7 +1139,7 @@
       const clientUrl = `${baseUrl}?loja=${store.id}`;
 
       navigator.clipboard.writeText(clientUrl).then(() => {
-        alert(`Link exclusivo da loja "${store.name}" copiado com sucesso!\n\nEnvie este link para seu cliente: ${clientUrl}`);
+        alert(`Link exclusivo da loja "${store.name}" copiado com sucesso!\n\nEnvie este link para seu cliente:\n${clientUrl}`);
       }).catch(() => {
         prompt("Copie o link abaixo para enviar ao seu cliente:", clientUrl);
       });
@@ -1088,6 +1164,179 @@
       return (Number(val) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
+    // =========================================================================
+    // GESTÃO DE OPERADORES (LIMITE DE 3 USUÁRIOS)
+    // =========================================================================
+    function ensureStoreOperators(store) {
+      if (!store.operators || !Array.isArray(store.operators)) {
+        store.operators = [
+          { id: "op_1", name: "Operador Principal", role: "Gerente", pin: "1234" }
+        ];
+      }
+      if (!store.license.maxUsers) {
+        store.license.maxUsers = 3;
+      }
+    }
+
+    function renderOperatorsUI() {
+      const store = getCurrentStore();
+      if (!store) return;
+      ensureStoreOperators(store);
+
+      const maxAllowed = store.license.maxUsers || 3;
+      const currentCount = store.operators.length;
+
+      // Badge de contagem
+      const limitBadge = document.getElementById('operatorLimitBadge');
+      if (limitBadge) {
+        limitBadge.innerText = `${currentCount} / ${maxAllowed} usuários`;
+        if (currentCount >= maxAllowed) {
+          limitBadge.className = "text-xs font-bold px-2.5 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded-lg";
+        } else {
+          limitBadge.className = "text-xs font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg";
+        }
+      }
+
+      // Desabilita o botão se atingiu o limite de 3
+      const addBtn = document.getElementById('addOpSubmitBtn');
+      if (addBtn) {
+        if (currentCount >= maxAllowed) {
+          addBtn.disabled = true;
+          addBtn.innerText = "Limite Atingido";
+          addBtn.className = "px-3 py-1.5 bg-slate-300 text-slate-500 rounded-lg text-xs font-bold whitespace-nowrap cursor-not-allowed";
+        } else {
+          addBtn.disabled = false;
+          addBtn.innerText = "+ Add";
+          addBtn.className = "px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold whitespace-nowrap shadow-sm";
+        }
+      }
+
+      // Preenche o Select do Topo
+      const topSelect = document.getElementById('activeOperatorSelect');
+      if (topSelect) {
+        topSelect.innerHTML = '';
+        store.operators.forEach(op => {
+          const opt = document.createElement('option');
+          opt.value = op.id;
+          opt.innerText = `${op.name} (${op.role})`;
+          if (op.id === activeOperatorId) opt.selected = true;
+          topSelect.appendChild(opt);
+        });
+
+        if (!store.operators.some(op => op.id === activeOperatorId)) {
+          activeOperatorId = store.operators[0]?.id || null;
+          localStorage.setItem('app_active_operator', activeOperatorId);
+        }
+      }
+
+      // Renderiza lista na aba Minha Loja
+      const listContainer = document.getElementById('operatorsListContainer');
+      if (listContainer) {
+        listContainer.innerHTML = '';
+        store.operators.forEach((op, idx) => {
+          const item = document.createElement('div');
+          item.className = "flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs";
+          item.innerHTML = `
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                ${op.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <span class="font-bold text-slate-800 block">${op.name}</span>
+                <span class="text-[10px] text-slate-400 font-medium">${op.role} • PIN: ****</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              ${store.operators.length > 1 ? 
+                `<button onclick="deleteOperator('${op.id}')" class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded text-xs font-semibold">Excluir</button>` : 
+                `<span class="text-[10px] text-slate-400">Padrão</span>`
+              }
+            </div>
+          `;
+          listContainer.appendChild(item);
+        });
+      }
+
+      // Atualiza texto da licença
+      const maxUsersDisplay = document.getElementById('currentLicenseMaxUsersText');
+      if (maxUsersDisplay) maxUsersDisplay.innerText = `${maxAllowed} usuários permitidos`;
+    }
+
+    function changeActiveOperator(opId) {
+      activeOperatorId = opId;
+      localStorage.setItem('app_active_operator', activeOperatorId);
+      const store = getCurrentStore();
+      const op = store?.operators?.find(o => o.id === opId);
+      if (op) {
+        alert(`Operador ativo alterado para: ${op.name}`);
+      }
+    }
+
+    function handleAddOperator(e) {
+      e.preventDefault();
+      const store = getCurrentStore();
+      if (!store) return;
+      ensureStoreOperators(store);
+
+      const maxAllowed = store.license.maxUsers || 3;
+      if (store.operators.length >= maxAllowed) {
+        alert(`Limite de ${maxAllowed} usuários atingido para esta loja! Para liberar mais operadores, fale com o suporte da licença.`);
+        return;
+      }
+
+      const name = document.getElementById('newOpName').value.trim();
+      const role = document.getElementById('newOpRole').value;
+      const pin = document.getElementById('newOpPin').value.trim();
+
+      if (!pin || pin.length !== 4) {
+        alert("O PIN de segurança deve ter exatamente 4 números!");
+        return;
+      }
+
+      const newOp = {
+        id: "op_" + Date.now(),
+        name,
+        role,
+        pin
+      };
+
+      store.operators.push(newOp);
+      saveState();
+
+      document.getElementById('newOpName').value = '';
+      document.getElementById('newOpPin').value = '';
+      renderOperatorsUI();
+      alert(`Operador "${name}" cadastrado com sucesso!`);
+    }
+
+    function deleteOperator(opId) {
+      const store = getCurrentStore();
+      if (!store) return;
+      if (store.operators.length <= 1) {
+        alert("A loja precisa ter pelo menos 1 operador cadastrado!");
+        return;
+      }
+
+      if (!confirm("Tem certeza que deseja remover este operador?")) return;
+
+      store.operators = store.operators.filter(o => o.id !== opId);
+      if (activeOperatorId === opId) {
+        activeOperatorId = store.operators[0]?.id || null;
+        localStorage.setItem('app_active_operator', activeOperatorId);
+      }
+
+      saveState();
+      renderOperatorsUI();
+    }
+
+    function getActiveOperatorName() {
+      const store = getCurrentStore();
+      if (!store || !store.operators) return "Geral";
+      const op = store.operators.find(o => o.id === activeOperatorId);
+      return op ? op.name : (store.operators[0]?.name || "Caixa");
+    }
+
+    // --- GESTÃO DE CATEGORIAS ---
     function ensureStoreCategories(store) {
       if (!store.categories || !Array.isArray(store.categories) || store.categories.length === 0) {
         store.categories = ["Geral", "Produtos", "Serviços"];
@@ -1461,6 +1710,7 @@
       document.getElementById('licenseStoreNameInput').value = store.name;
       document.getElementById('licenseKeyInput').value = store.license?.key || generateLicenseKey();
       document.getElementById('licenseExpiryInput').value = store.license?.expiryDate || getDefaultExpiryDate(30);
+      document.getElementById('licenseMaxUsersInput').value = store.license?.maxUsers || 3;
       document.getElementById('licenseStatusInput').value = store.license?.status || "ativa";
 
       document.getElementById('licenseModal').classList.remove('hidden');
@@ -1483,6 +1733,7 @@
       store.license = {
         key: document.getElementById('licenseKeyInput').value.trim(),
         expiryDate: document.getElementById('licenseExpiryInput').value,
+        maxUsers: parseInt(document.getElementById('licenseMaxUsersInput').value) || 3,
         status: document.getElementById('licenseStatusInput').value
       };
 
@@ -1490,6 +1741,7 @@
       closeLicenseModal();
       renderMasterDashboard();
       renderStoreHeader();
+      renderOperatorsUI();
       alert(`Licença da loja "${store.name}" atualizada!`);
     }
 
@@ -1498,7 +1750,7 @@
       if (!store) return;
 
       if (!store.license) {
-        store.license = { key: generateLicenseKey(), expiryDate: getDefaultExpiryDate(30), status: "ativa" };
+        store.license = { key: generateLicenseKey(), expiryDate: getDefaultExpiryDate(30), status: "ativa", maxUsers: 3 };
       } else {
         store.license.status = store.license.status === "ativa" ? "bloqueada" : "ativa";
       }
@@ -1527,6 +1779,8 @@
         if (licStatus.valid) activeCount++;
 
         const isCurrent = s.id === currentStoreId;
+        const opCount = s.operators ? s.operators.length : 1;
+        const maxOp = s.license?.maxUsers || 3;
 
         const tr = document.createElement('tr');
         tr.className = "border-b hover:bg-slate-50";
@@ -1536,6 +1790,7 @@
             ${isCurrent ? '<span class="ml-1 text-[9px] bg-indigo-100 text-indigo-800 px-1 py-0.5 rounded font-bold">Ativa no PDV</span>' : ''}
           </td>
           <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${s.segment}</span></td>
+          <td class="p-3"><span class="px-2 py-0.5 ${opCount >= maxOp ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'} rounded text-xs font-bold">${opCount}/${maxOp}</span></td>
           <td class="p-3 font-mono text-xs font-semibold text-slate-700">${s.license?.key || 'Sem chave'}</td>
           <td class="p-3 text-xs font-semibold ${!licStatus.valid ? 'text-rose-600' : 'text-slate-700'}">${s.license?.expiryDate || 'N/A'}</td>
           <td class="p-3">
@@ -1573,6 +1828,7 @@
       selectedPdvCategory = 'all';
       saveState();
       renderStoreHeader();
+      renderOperatorsUI();
       renderPdvCategoryChips();
       renderPdvProducts();
       renderCart();
@@ -1594,8 +1850,12 @@
         license: {
           key: generateLicenseKey(),
           expiryDate: getDefaultExpiryDate(days),
-          status: "ativa"
+          status: "ativa",
+          maxUsers: 3
         },
+        operators: [
+          { id: "op_1", name: "Operador Principal", role: "Gerente", pin: "1234" }
+        ],
         products: [],
         sales: []
       };
@@ -1604,7 +1864,7 @@
       saveState();
       renderMasterDashboard();
       
-      const copyNow = confirm(`Loja "${name}" criada com sucesso!\n\nChave de Ativação: ${newStore.license.key}\n\nDeseja copiar o link exclusivo desta loja agora para enviar ao cliente?`);
+      const copyNow = confirm(`Loja "${name}" criada com sucesso (Limite: 3 usuários)!\n\nChave de Ativação: ${newStore.license.key}\n\nDeseja copiar o link exclusivo desta loja agora para enviar ao cliente?`);
       if (copyNow) {
         copyClientStoreLink(newStore.id);
       }
@@ -1801,6 +2061,10 @@
       if (!enforceLicense() || cart.length === 0) return;
       const { total } = calculateCartTotals();
       document.getElementById('modalPayableTotal').innerText = formatBRL(total);
+      
+      const opName = getActiveOperatorName();
+      document.getElementById('modalOperatorInfo').innerText = `Operador: ${opName}`;
+
       document.getElementById('paymentModal').classList.remove('hidden');
       selectPaymentMethod('pix');
     }
@@ -1871,9 +2135,11 @@
       }, 0);
 
       const netProfit = Math.max(0, totals.total - totalCost);
+      const opName = getActiveOperatorName();
 
       const sale = {
         id: "VND-" + Math.floor(100000 + Math.random() * 900000),
+        operatorName: opName,
         timestamp: new Date().toISOString(),
         items: JSON.parse(JSON.stringify(cart)),
         subtotal: totals.subtotal,
@@ -1896,7 +2162,7 @@
         switchMobilePdvTab('catalog');
       }
 
-      alert(`Venda ${sale.id} realizada e sincronizada!`);
+      alert(`Venda ${sale.id} realizada com sucesso por [${opName}]!`);
       renderSalesHistory();
     }
 
@@ -1967,8 +2233,9 @@
         tr.className = "border-b hover:bg-slate-50";
         tr.innerHTML = `
           <td class="p-3 font-mono font-bold text-xs">${sale.id}</td>
+          <td class="p-3 text-xs font-semibold text-indigo-700 whitespace-nowrap">${sale.operatorName || 'Geral'}</td>
           <td class="p-3 text-xs whitespace-nowrap">${dateStr}</td>
-          <td class="p-3 max-w-[150px] truncate text-xs" title="${itemsSummary}">${itemsSummary}</td>
+          <td class="p-3 max-w-[140px] truncate text-xs" title="${itemsSummary}">${itemsSummary}</td>
           <td class="p-3 whitespace-nowrap">${getPaymentBadge(sale.paymentMethod)}</td>
           <td class="p-3 font-bold text-slate-800 whitespace-nowrap">${formatBRL(sale.total)}</td>
           <td class="p-3 whitespace-nowrap">
@@ -2023,6 +2290,7 @@
       const confirmClose = confirm(
         `RELATÓRIO DE FECHAMENTO DE CAIXA:\n` +
         `Loja: ${store.name}\n` +
+        `Operador Responsável: ${getActiveOperatorName()}\n` +
         `Total Faturado no Turno: ${formatBRL(total)}\n` +
         `Lucro Estimado no Turno: ${formatBRL(totalLucro)}\n\n` +
         `Deseja fechar o caixa e arquivar este turno em todos os aparelhos?`
@@ -2165,6 +2433,8 @@
 
       document.getElementById('currentLicenseKeyText').innerText = store.license?.key || 'Não gerada';
       document.getElementById('currentLicenseExpiryText').innerText = store.license?.expiryDate || 'N/A';
+      
+      renderOperatorsUI();
     }
 
     function saveStoreSettings(e) {
@@ -2244,12 +2514,11 @@
     });
 
     function initApp() {
-      // 1. Verifica parâmetro de URL
       checkUrlParameters();
 
-      // 2. Se já tem loja definida, inicializa
       if (currentStoreId && stores.some(s => s.id === currentStoreId)) {
         renderStoreHeader();
+        renderOperatorsUI();
         renderCategorySelectors();
         renderPdvProducts();
         renderCart();
