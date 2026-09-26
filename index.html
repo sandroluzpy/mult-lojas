@@ -128,22 +128,20 @@
             </div>
           </div>
 
-          <!-- Filtro de Categorias no PDV (Chips Deslizáveis) -->
+          <!-- Filtro de Categorias no PDV -->
           <div class="bg-white p-2.5 sm:p-3 rounded-xl shadow-sm border border-slate-200">
             <div class="flex items-center justify-between mb-1.5">
               <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                 <i class="ph ph-tag text-indigo-600"></i> Filtrar por Categoria:
               </span>
             </div>
-            <div id="pdvCategoryChips" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-              <!-- Renderizado via JS -->
-            </div>
+            <div id="pdvCategoryChips" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5"></div>
           </div>
 
-          <!-- Grade de Produtos -->
+          <!-- Grade de Produtos/Serviços -->
           <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col">
             <div class="flex justify-between items-center mb-3">
-              <h2 class="font-bold text-sm sm:text-base text-slate-700">Catálogo de Produtos & Serviços</h2>
+              <h2 class="font-bold text-sm sm:text-base text-slate-700">Catálogo de Itens</h2>
               <span id="productCounterBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">0 itens</span>
             </div>
             <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
@@ -220,8 +218,6 @@
 
     <!-- VIEW: PRODUTOS & GESTÃO DE CATEGORIAS -->
     <section id="view-produtos" class="view-panel hidden space-y-4">
-      
-      <!-- Cadastro de Produtos/Serviços -->
       <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b mb-3 gap-2">
           <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -235,7 +231,6 @@
         <form id="productForm" onsubmit="handleProductSubmit(event)" class="space-y-4">
           <input type="hidden" id="prodEditId">
 
-          <!-- Upload da Foto do Produto -->
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Foto do Item (Arquivos do dispositivo)</label>
             <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
@@ -261,18 +256,15 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div class="sm:col-span-2">
               <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Produto ou Serviço</label>
-              <input id="prodName" type="text" required placeholder="Ex: Camiseta Básica ou Corte Masculino" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+              <input id="prodName" type="text" required placeholder="Ex: Corte Masculino, Manutenção ou Camiseta" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
             </div>
 
-            <!-- Seleção de Categoria com Botão Inline de Adicionar -->
             <div>
               <div class="flex justify-between items-center mb-1">
                 <label class="block text-xs font-semibold text-slate-600">Categoria</label>
                 <button type="button" onclick="promptCreateNewCategory()" class="text-[10px] text-indigo-600 hover:underline font-bold">+ Criar</button>
               </div>
-              <select id="prodCategorySelect" required class="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
-                <!-- Preenchido via JS -->
-              </select>
+              <select id="prodCategorySelect" required class="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"></select>
             </div>
 
             <div>
@@ -298,17 +290,15 @@
         </form>
       </div>
 
-      <!-- Gerenciador de Categorias Cadastradas -->
+      <!-- Gerenciador de Categorias -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div class="flex items-center justify-between mb-2">
           <h3 class="font-bold text-xs sm:text-sm text-slate-800 flex items-center gap-1.5">
             <i class="ph ph-folders text-indigo-600 text-base"></i> Categorias da Loja
           </h3>
-          <span class="text-[11px] text-slate-400">Clique no 'x' para excluir uma categoria</span>
+          <span class="text-[11px] text-slate-400">Clique no 'x' para excluir</span>
         </div>
-        <div id="categoryTagsContainer" class="flex flex-wrap gap-2 pt-1">
-          <!-- Renderizado via JS -->
-        </div>
+        <div id="categoryTagsContainer" class="flex flex-wrap gap-2 pt-1"></div>
       </div>
 
       <!-- Tabela de Itens Cadastrados -->
@@ -336,8 +326,6 @@
 
     <!-- VIEW: HISTÓRICO, TOTAL DE VENDAS & LUCRO DO DIA -->
     <section id="view-historico" class="view-panel hidden space-y-4">
-      
-      <!-- Cartões em Destaque: Vendas e Lucro de Hoje -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         
         <div class="bg-gradient-to-br from-emerald-600 to-teal-700 p-4 sm:p-5 rounded-2xl text-white shadow-md flex items-center justify-between">
@@ -430,7 +418,7 @@
       </div>
     </section>
 
-    <!-- VIEW: MINHA LOJA (CONFIGURAÇÃO COM UPLOAD DE LOGO) -->
+    <!-- VIEW: MINHA LOJA (COM SEGMENTO SERVIÇOS ADICIONADO) -->
     <section id="view-config" class="view-panel hidden max-w-2xl mx-auto space-y-4">
       <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
         <div>
@@ -451,6 +439,7 @@
               <option value="Calçados">Calçados</option>
               <option value="Cosméticos">Cosméticos</option>
               <option value="Variedades">Variedades</option>
+              <option value="Serviços">Serviços</option>
               <option value="Comércio Geral">Comércio Geral</option>
             </select>
           </div>
@@ -828,7 +817,7 @@
     let appliedDiscount = { type: 'fixed', value: 0 };
     let selectedPayment = null;
     let currentMobilePdvTab = 'catalog';
-    let selectedPdvCategory = 'all'; // Categoria ativa no filtro do PDV
+    let selectedPdvCategory = 'all';
 
     let tempUploadedLogoBase64 = "";
     let tempUploadedProductImageBase64 = "";
@@ -858,7 +847,6 @@
       const store = getCurrentStore();
       ensureStoreCategories(store);
 
-      // 1. Preenche o select do formulário de produto
       const prodCatSelect = document.getElementById('prodCategorySelect');
       prodCatSelect.innerHTML = '';
       store.categories.forEach(cat => {
@@ -869,7 +857,6 @@
         prodCatSelect.appendChild(opt);
       });
 
-      // 2. Preenche os chips de tags na aba produtos
       const tagsContainer = document.getElementById('categoryTagsContainer');
       tagsContainer.innerHTML = '';
       store.categories.forEach(cat => {
@@ -884,7 +871,6 @@
         tagsContainer.appendChild(tag);
       });
 
-      // 3. Preenche os chips de filtro no PDV
       renderPdvCategoryChips();
     }
 
@@ -894,7 +880,6 @@
       const container = document.getElementById('pdvCategoryChips');
       container.innerHTML = '';
 
-      // Botão "Todos"
       const allBtn = document.createElement('button');
       allBtn.type = 'button';
       const isAllActive = selectedPdvCategory === 'all';
@@ -909,7 +894,6 @@
       };
       container.appendChild(allBtn);
 
-      // Botões para cada categoria existente
       store.categories.forEach(cat => {
         const catCount = store.products.filter(p => p.category === cat).length;
         const btn = document.createElement('button');
@@ -929,7 +913,7 @@
     }
 
     function promptCreateNewCategory() {
-      const name = prompt("Nome da nova categoria (ex: Camisas, Cosméticos, Sobremesas, Serviços, etc):");
+      const name = prompt("Nome da nova categoria (ex: Manutenção, Cortes, Bebidas, Roupas, etc):");
       if (!name || name.trim() === '') return;
 
       const trimmedName = name.trim();
@@ -960,7 +944,6 @@
       store.categories = store.categories.filter(c => c !== catName);
       if (!store.categories.includes("Geral")) store.categories.unshift("Geral");
 
-      // Atualiza produtos que estavam nessa categoria
       store.products.forEach(p => {
         if (p.category === catName) p.category = "Geral";
       });
@@ -1325,13 +1308,13 @@
     function openNewStoreModal() {
       const name = prompt("Nome da nova loja:");
       if (!name) return;
-      const segment = prompt("Segmento (Moda, Calçados, Cosméticos, Variedades ou Comércio Geral):", "Comércio Geral");
+      const segment = prompt("Segmento (Moda, Calçados, Cosméticos, Variedades, Serviços ou Comércio Geral):", "Serviços");
       const days = parseInt(prompt("Dias de validade da licença inicial:", "30")) || 30;
 
       const newStore = {
         id: "store_" + Date.now(),
         name: name.trim(),
-        segment: segment || "Comércio Geral",
+        segment: segment || "Serviços",
         logo: "",
         categories: ["Geral", "Produtos", "Serviços"],
         license: {
@@ -1349,7 +1332,7 @@
       saveState();
       initApp();
       renderMasterDashboard();
-      alert(`Loja "${name}" criada com sucesso!`);
+      alert(`Loja "${name}" criada com sucesso!\nSegmento: ${newStore.segment}`);
     }
 
     // --- CATÁLOGO & FRENTE DE CAIXA (PDV COM FILTRO DE CATEGORIAS) ---
@@ -1363,7 +1346,6 @@
         p.barcode.includes(filter)
       );
 
-      // Filtro por categoria
       if (selectedPdvCategory !== 'all') {
         filtered = filtered.filter(p => p.category === selectedPdvCategory);
       }
@@ -1892,7 +1874,7 @@
     function loadStoreSettings() {
       const store = getCurrentStore();
       document.getElementById('settingStoreName').value = store.name;
-      document.getElementById('settingStoreSegment').value = store.segment;
+      document.getElementById('settingStoreSegment').value = store.segment || "Serviços";
       
       tempUploadedLogoBase64 = store.logo || "";
       document.getElementById('logoFileInput').value = '';
