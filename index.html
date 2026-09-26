@@ -31,6 +31,40 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col pb-20 md:pb-6">
 
+  <!-- TELA DE ATIVAÇÃO DE DISPOSITIVO (QUANDO O CLIENTE ABRE O LINK PELA PRIMEIRA VEZ SEM VÍNCULO) -->
+  <div id="deviceActivationModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white max-w-md w-full p-6 sm:p-7 rounded-2xl shadow-2xl text-center border border-slate-200 animate-in fade-in zoom-in duration-200">
+      <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
+        <i class="ph ph-key text-3xl font-bold"></i>
+      </div>
+      <h3 class="text-xl font-bold text-slate-900">Ativação do PDV Pro</h3>
+      <p class="text-xs sm:text-sm text-slate-600 mt-1 mb-5 leading-relaxed">
+        Digite a Chave de Licença fornecida pelo seu administrador para conectar este dispositivo à sua loja.
+      </p>
+
+      <form onsubmit="handleDeviceActivation(event)" class="space-y-3.5">
+        <div>
+          <input 
+            id="activationKeyInput" 
+            type="text" 
+            required 
+            placeholder="Ex: XXXX-XXXX-XXXX-XXXX" 
+            class="w-full px-4 py-3 border border-slate-300 rounded-xl text-center text-sm sm:text-base font-mono uppercase font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+        </div>
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-sm transition shadow-md">
+          Ativar Minha Loja
+        </button>
+      </form>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 flex justify-center">
+        <button onclick="openMasterAuthModal()" class="text-xs text-slate-400 hover:text-slate-600 font-medium flex items-center gap-1">
+          <i class="ph ph-crown"></i> Acesso Administrativo Master
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- AVISO DE LICENÇA EXPIRADA / SUSPENSA -->
   <div id="licenseBlockedOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-2xl text-center border border-rose-200">
@@ -66,7 +100,7 @@
           <div class="flex items-center gap-1.5 flex-wrap">
             <h1 id="shopNameDisplay" class="font-bold text-sm sm:text-base leading-tight truncate max-w-[120px] sm:max-w-[200px]">Loja</h1>
             <span id="shopLicenseBadge" class="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">Ativa</span>
-            <!-- Indicador de Nuvem / Sincronização -->
+            <!-- Indicador de Nuvem -->
             <span id="cloudStatusIndicator" title="Status de sincronização em nuvem" class="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
               <span id="cloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
               <span id="cloudStatusText" class="hidden sm:inline">Conectando...</span>
@@ -506,7 +540,7 @@
       </div>
     </section>
 
-    <!-- VIEW: PAINEL MASTER ADM -->
+    <!-- VIEW: PAINEL MASTER ADM (COM BOTÃO COPIAR LINK DO CLIENTE) -->
     <section id="view-master" class="view-panel hidden space-y-4">
       <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 sm:p-6 rounded-2xl text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -554,7 +588,7 @@
           <h3 class="font-bold text-sm sm:text-base text-slate-800">Controle de Lojas e Licenciamento</h3>
         </div>
         <div class="overflow-x-auto no-scrollbar">
-          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[700px]">
+          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[780px]">
             <thead class="bg-slate-50 border-b text-[10px] sm:text-xs uppercase text-slate-500">
               <tr>
                 <th class="p-3">Loja</th>
@@ -807,8 +841,15 @@
           });
           stores = cloudStores;
 
-          if (!stores.some(s => s.id === currentStoreId)) {
-            currentStoreId = stores[0]?.id || "store_1";
+          // Se a URL tiver o parâmetro ?loja=...
+          checkUrlParameters();
+
+          // Se não houver loja válida vinculada neste aparelho, exibe tela de ativação
+          if (!currentStoreId || !stores.some(s => s.id === currentStoreId)) {
+            showDeviceActivationModal();
+            return;
+          } else {
+            hideDeviceActivationModal();
           }
 
           localStorage.setItem('app_stores', JSON.stringify(stores));
@@ -928,27 +969,22 @@
     const DEFAULT_STORES = [
       {
         id: "store_1",
-        name: "Boutique Elegance",
-        segment: "Moda",
+        name: "Luz Gestão",
+        segment: "Serviços",
         logo: "",
-        categories: ["Roupas", "Calçados", "Acessórios", "Serviços de Ajuste"],
+        categories: ["Geral", "Produtos", "Serviços"],
         license: {
           key: generateLicenseKey(),
-          expiryDate: getDefaultExpiryDate(60),
+          expiryDate: getDefaultExpiryDate(365),
           status: "ativa"
         },
-        products: [
-          { id: "p1", name: "Camiseta Oversized Algodão", category: "Roupas", barcode: "7891001", costPrice: 35.00, price: 79.90, image: "" },
-          { id: "p2", name: "Calça Jeans Slim Fit", category: "Roupas", barcode: "7891002", costPrice: 70.00, price: 159.00, image: "" },
-          { id: "p3", name: "Vestido Midi Floral", category: "Roupas", barcode: "7891003", costPrice: 85.00, price: 189.90, image: "" },
-          { id: "p4", name: "Tênis Casual Branco", category: "Calçados", barcode: "7891004", costPrice: 95.00, price: 219.00, image: "" }
-        ],
+        products: [],
         sales: []
       }
     ];
 
     let stores = JSON.parse(localStorage.getItem('app_stores')) || DEFAULT_STORES;
-    let currentStoreId = localStorage.getItem('app_current_store') || stores[0].id;
+    let currentStoreId = localStorage.getItem('app_current_store') || null;
     let cart = [];
     let appliedDiscount = { type: 'fixed', value: 0 };
     let selectedPayment = null;
@@ -957,6 +993,81 @@
 
     let tempUploadedLogoBase64 = "";
     let tempUploadedProductImageBase64 = "";
+
+    // =========================================================================
+    // VÍNCULO DE DISPOSITIVO / ATIVAÇÃO DE CLIENTE
+    // =========================================================================
+    function checkUrlParameters() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const storeParam = urlParams.get('loja');
+      const keyParam = urlParams.get('chave');
+
+      if (storeParam) {
+        const found = stores.find(s => s.id === storeParam);
+        if (found) {
+          currentStoreId = found.id;
+          localStorage.setItem('app_current_store', currentStoreId);
+          // Limpa a URL da barra para ficar esteticamente limpo
+          window.history.replaceState({}, document.title, window.location.pathname);
+          hideDeviceActivationModal();
+          return;
+        }
+      }
+
+      if (keyParam) {
+        const found = stores.find(s => s.license?.key?.toUpperCase() === keyParam.toUpperCase());
+        if (found) {
+          currentStoreId = found.id;
+          localStorage.setItem('app_current_store', currentStoreId);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          hideDeviceActivationModal();
+          return;
+        }
+      }
+    }
+
+    function showDeviceActivationModal() {
+      const modal = document.getElementById('deviceActivationModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function hideDeviceActivationModal() {
+      const modal = document.getElementById('deviceActivationModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleDeviceActivation(e) {
+      e.preventDefault();
+      const inputKey = document.getElementById('activationKeyInput').value.trim().toUpperCase();
+      const foundStore = stores.find(s => s.license?.key?.toUpperCase() === inputKey);
+
+      if (foundStore) {
+        currentStoreId = foundStore.id;
+        localStorage.setItem('app_current_store', currentStoreId);
+        hideDeviceActivationModal();
+        renderStoreHeader();
+        renderPdvCategoryChips();
+        renderPdvProducts();
+        renderCart();
+        alert(`Dispositivo ativado com sucesso para a loja "${foundStore.name}"!`);
+      } else {
+        alert("Chave de Licença não encontrada! Verifique os dígitos e tente novamente.");
+      }
+    }
+
+    function copyClientStoreLink(storeId) {
+      const store = stores.find(s => s.id === storeId);
+      if (!store) return;
+
+      const baseUrl = window.location.origin + window.location.pathname;
+      const clientUrl = `${baseUrl}?loja=${store.id}`;
+
+      navigator.clipboard.writeText(clientUrl).then(() => {
+        alert(`Link exclusivo da loja "${store.name}" copiado com sucesso!\n\nEnvie este link para seu cliente: ${clientUrl}`);
+      }).catch(() => {
+        prompt("Copie o link abaixo para enviar ao seu cliente:", clientUrl);
+      });
+    }
 
     function saveState() {
       localStorage.setItem('app_stores', JSON.stringify(stores));
@@ -970,7 +1081,7 @@
     }
 
     function getCurrentStore() {
-      return stores.find(s => s.id === currentStoreId) || stores[0];
+      return stores.find(s => s.id === currentStoreId) || null;
     }
 
     function formatBRL(val) {
@@ -1065,6 +1176,7 @@
 
       const trimmedName = name.trim();
       const store = getCurrentStore();
+      if (!store) return;
       ensureStoreCategories(store);
 
       if (store.categories.some(c => c.toLowerCase() === trimmedName.toLowerCase())) {
@@ -1079,6 +1191,7 @@
 
     function deleteCategory(catName) {
       const store = getCurrentStore();
+      if (!store) return;
       const linkedCount = (store.products || []).filter(p => p.category === catName).length;
 
       const msg = linkedCount > 0 
@@ -1171,7 +1284,7 @@
     }
 
     function checkLicenseStatus(store) {
-      if (!store.license) {
+      if (!store || !store.license) {
         return { valid: false, reason: "Loja sem licença configurada." };
       }
       if (store.license.status === "bloqueada") {
@@ -1278,10 +1391,14 @@
       if (isMasterAuthenticated) {
         switchView('master');
       } else {
-        document.getElementById('masterPasswordInput').value = '';
-        document.getElementById('masterAuthModal').classList.remove('hidden');
-        setTimeout(() => document.getElementById('masterPasswordInput').focus(), 150);
+        openMasterAuthModal();
       }
+    }
+
+    function openMasterAuthModal() {
+      document.getElementById('masterPasswordInput').value = '';
+      document.getElementById('masterAuthModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('masterPasswordInput').focus(), 150);
     }
 
     function closeMasterAuthModal() {
@@ -1294,6 +1411,7 @@
       if (pwd === masterPassword) {
         isMasterAuthenticated = true;
         closeMasterAuthModal();
+        hideDeviceActivationModal();
         switchView('master');
       } else {
         alert("Senha Master incorreta!");
@@ -1303,7 +1421,11 @@
 
     function lockMasterPanel() {
       isMasterAuthenticated = false;
-      switchView('pdv');
+      if (!currentStoreId) {
+        showDeviceActivationModal();
+      } else {
+        switchView('pdv');
+      }
     }
 
     function requestMasterAccessDirectly() {
@@ -1411,7 +1533,7 @@
         tr.innerHTML = `
           <td class="p-3">
             <span class="font-bold text-slate-800">${s.name}</span>
-            ${isCurrent ? '<span class="ml-1 text-[9px] bg-indigo-100 text-indigo-800 px-1 py-0.5 rounded font-bold">Ativa</span>' : ''}
+            ${isCurrent ? '<span class="ml-1 text-[9px] bg-indigo-100 text-indigo-800 px-1 py-0.5 rounded font-bold">Ativa no PDV</span>' : ''}
           </td>
           <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${s.segment}</span></td>
           <td class="p-3 font-mono text-xs font-semibold text-slate-700">${s.license?.key || 'Sem chave'}</td>
@@ -1423,7 +1545,10 @@
           </td>
           <td class="p-3 font-bold text-slate-900">${formatBRL(storeTotal)}</td>
           <td class="p-3 text-right space-x-1 whitespace-nowrap">
-            <button onclick="openLicenseModal('${s.id}')" title="Licença" class="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 rounded text-xs font-semibold border border-amber-400/30">
+            <button onclick="copyClientStoreLink('${s.id}')" title="Copiar Link para o Cliente" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-xs font-bold border border-emerald-300">
+              <i class="ph ph-share-network"></i> Link
+            </button>
+            <button onclick="openLicenseModal('${s.id}')" title="Configurar Licença" class="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 rounded text-xs font-semibold border border-amber-400/30">
               <i class="ph ph-key"></i>
             </button>
             <button onclick="toggleStoreStatusQuick('${s.id}')" class="px-2 py-1 ${s.license?.status === 'bloqueada' ? 'bg-emerald-600 text-white' : 'bg-rose-100 text-rose-700'} rounded text-xs font-semibold">
@@ -1455,7 +1580,7 @@
     }
 
     function openNewStoreModal() {
-      const name = prompt("Nome da nova loja:");
+      const name = prompt("Nome da nova loja do cliente:");
       if (!name) return;
       const segment = prompt("Segmento (Moda, Calçados, Cosméticos, Variedades, Serviços ou Comércio Geral):", "Serviços");
       const days = parseInt(prompt("Dias de validade da licença inicial:", "30")) || 30;
@@ -1476,15 +1601,13 @@
       };
 
       stores.push(newStore);
-      currentStoreId = newStore.id;
-      selectedPdvCategory = 'all';
       saveState();
-      renderStoreHeader();
-      renderPdvCategoryChips();
-      renderPdvProducts();
-      renderCart();
       renderMasterDashboard();
-      alert(`Loja "${name}" criada e sincronizada com todos os dispositivos!`);
+      
+      const copyNow = confirm(`Loja "${name}" criada com sucesso!\n\nChave de Ativação: ${newStore.license.key}\n\nDeseja copiar o link exclusivo desta loja agora para enviar ao cliente?`);
+      if (copyNow) {
+        copyClientStoreLink(newStore.id);
+      }
     }
 
     function renderPdvProducts(filter = '') {
@@ -1657,6 +1780,7 @@
         if (!query) return;
 
         const store = getCurrentStore();
+        if (!store) return;
         const exactMatch = store.products.find(p => p.barcode === query);
         if (exactMatch) {
           addToCart(exactMatch);
@@ -1738,6 +1862,7 @@
     function confirmSale() {
       if (!enforceLicense() || !selectedPayment || cart.length === 0) return;
       const store = getCurrentStore();
+      if (!store) return;
       const totals = calculateCartTotals();
 
       const totalCost = cart.reduce((acc, item) => {
@@ -1879,6 +2004,7 @@
     function cancelSale(saleId) {
       if (!confirm(`Deseja cancelar a venda ${saleId}? O valor será revertido em todos os dispositivos.`)) return;
       const store = getCurrentStore();
+      if (!store) return;
       const sale = store.sales.find(s => s.id === saleId);
       if (sale) {
         sale.status = 'Cancelada';
@@ -1889,6 +2015,7 @@
 
     function closeRegisterModal() {
       const store = getCurrentStore();
+      if (!store) return;
       const completed = (store.sales || []).filter(s => s.status === 'Concluída');
       const total = completed.reduce((acc, s) => acc + s.total, 0);
       const totalLucro = completed.reduce((acc, s) => acc + (s.profit || 0), 0);
@@ -1950,6 +2077,7 @@
     function handleProductSubmit(e) {
       e.preventDefault();
       const store = getCurrentStore();
+      if (!store) return;
       const editId = document.getElementById('prodEditId').value;
       const name = document.getElementById('prodName').value.trim();
       const category = document.getElementById('prodCategorySelect').value || "Geral";
@@ -1989,6 +2117,7 @@
 
     function editProduct(id) {
       const store = getCurrentStore();
+      if (!store) return;
       const prod = store.products.find(p => p.id === id);
       if (!prod) return;
 
@@ -2009,6 +2138,7 @@
     function deleteProduct(id) {
       if (!confirm("Remover este item do catálogo?")) return;
       const store = getCurrentStore();
+      if (!store) return;
       store.products = store.products.filter(p => p.id !== id);
       saveState();
       renderCategorySelectors();
@@ -2040,6 +2170,7 @@
     function saveStoreSettings(e) {
       e.preventDefault();
       const store = getCurrentStore();
+      if (!store) return;
       store.name = document.getElementById('settingStoreName').value.trim();
       store.segment = document.getElementById('settingStoreSegment').value;
       store.logo = tempUploadedLogoBase64;
@@ -2113,10 +2244,16 @@
     });
 
     function initApp() {
-      renderStoreHeader();
-      renderCategorySelectors();
-      renderPdvProducts();
-      renderCart();
+      // 1. Verifica parâmetro de URL
+      checkUrlParameters();
+
+      // 2. Se já tem loja definida, inicializa
+      if (currentStoreId && stores.some(s => s.id === currentStoreId)) {
+        renderStoreHeader();
+        renderCategorySelectors();
+        renderPdvProducts();
+        renderCart();
+      }
 
       if (window.innerWidth < 1024) {
         switchMobilePdvTab('catalog');
