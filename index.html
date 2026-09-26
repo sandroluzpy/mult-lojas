@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema PDV Pro Multi-Lojas</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons CDN -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- BARRA DE NAVEGAÇÃO PRINCIPAL -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div id="shopLogoContainer" class="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center overflow-hidden border border-slate-700">
+          <i id="shopLogoFallback" class="ph ph-storefront text-2xl text-white"></i>
+          <img id="shopLogoImg" src="" alt="Logo" class="hidden w-full h-full object-cover">
+        </div>
+        <div>
+          <h1 id="shopNameDisplay" class="font-bold text-lg leading-tight">Nome da Loja</h1>
+          <span id="shopSegmentDisplay" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-indigo-300 border border-slate-700 font-medium">Segmento</span>
+        </div>
+      </div>
+
+      <nav class="flex items-center gap-2">
+        <button onclick="switchView('pdv')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 transition">
+          <i class="ph ph-cash-register text-lg"></i> Frente de Caixa
+        </button>
+        <button onclick="switchView('produtos')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
+          <i class="ph ph-package text-lg"></i> Produtos
+        </button>
+        <button onclick="switchView('historico')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
+          <i class="ph ph-receipt text-lg"></i> Vendas & Caixa
+        </button>
+        <button onclick="switchView('config')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-slate-300 hover:bg-slate-800 transition">
+          <i class="ph ph-gear text-lg"></i> Minha Loja
+        </button>
+        <button onclick="switchView('master')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 transition">
+          <i class="ph ph-crown text-lg"></i> Master ADM
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4">
+
+    <!-- VIEW: FRENTE DE CAIXA (PDV) -->
+    <section id="view-pdv" class="view-panel grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Lado Esquerdo: Busca rápida e catálogo -->
+      <div class="lg:col-span-7 flex flex-col gap-4">
+        <!-- Barra de busca rápida com suporte a leitor de código de barras -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Busca de Produtos / Leitor de Código de Barras (Enter)</label>
+          <div class="relative">
+            <i class="ph ph-barcode text-2xl absolute left-3 top-2.5 text-slate-400"></i>
+            <input 
+              id="barcodeSearchInput" 
+              type="text" 
+              placeholder="Digite o nome ou bipe o código de barras..." 
+              class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 text-sm"
+              autofocus
+            />
+          </div>
+        </div>
+
+        <!-- Grade de Produtos Rápidos -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="font-bold text-slate-700">Catálogo Rápido</h2>
+            <span id="productCounterBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">0 itens</span>
+          </div>
+          <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-1">
+            <!-- Itens inseridos via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Lado Direito: Carrinho e Checkout -->
+      <div class="lg:col-span-5 flex flex-col gap-4">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+          
+          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+              <i class="ph ph-shopping-cart text-xl text-indigo-600"></i> Itens da Venda
+            </h3>
+            <button onclick="clearCart()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold">Limpar Venda</button>
+          </div>
+
+          <!-- Lista do Carrinho -->
+          <div id="cartItemsList" class="flex-1 p-4 overflow-y-auto max-h-[340px] space-y-3">
+            <!-- Vazio por padrão -->
+          </div>
+
+          <!-- Totais & Resumo Financeiro -->
+          <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
+            <div class="flex justify-between text-sm text-slate-600">
+              <span>Subtotal:</span>
+              <span id="subtotalDisplay" class="font-semibold text-slate-800">R$ 0,00</span>
+            </div>
+
+            <!-- Desconto -->
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-semibold text-slate-600 whitespace-nowrap">Desconto:</label>
+              <div class="flex gap-1 flex-1">
+                <input id="discountValue" type="number" min="0" step="0.5" placeholder="0" class="w-full px-2 py-1 border border-slate-300 rounded text-sm text-right focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <select id="discountType" class="px-2 py-1 border border-slate-300 rounded text-xs bg-white">
+                  <option value="fixed">R$</option>
+                  <option value="percent">%</option>
+                </select>
+                <button onclick="applyDiscount()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-xs font-bold rounded">OK</button>
+              </div>
+            </div>
+
+            <div class="flex justify-between text-xl font-black text-slate-900 border-t border-slate-200 pt-2">
+              <span>TOTAL:</span>
+              <span id="totalDisplay" class="text-indigo-600">R$ 0,00</span>
+            </div>
+
+            <button onclick="openPaymentModal()" id="finishSaleBtn" disabled class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-base">
+              <i class="ph ph-check-circle text-xl"></i> Finalizar Venda (F2)
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- VIEW: GESTÃO DE PRODUTOS -->
+    <section id="view-produtos" class="view-panel hidden space-y-6">
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <i class="ph ph-plus-circle text-indigo-600 text-xl"></i> Cadastrar / Atualizar Produto
+        </h2>
+        <form id="productForm" onsubmit="handleProductSubmit(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <input type="hidden" id="prodEditId">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Produto</label>
+            <input id="prodName" type="text" required placeholder="Ex: Camiseta Básica Algodão" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Código de Barras / SKU</label>
+            <input id="prodBarcode" type="text" required placeholder="Ex: 789123456789" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Preço de Venda (R$)</label>
+            <input id="prodPrice" type="number" step="0.01" min="0.01" required placeholder="0,00" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div class="md:col-span-4 flex justify-end gap-2">
+            <button type="button" onclick="resetProductForm()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+            <button type="submit" class="px-5 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg">Salvar Produto</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+          <h3 class="font-bold text-slate-800">Estoque Cadastrado</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+              <tr>
+                <th class="p-3">Código</th>
+                <th class="p-3">Produto</th>
+                <th class="p-3">Preço Unitário</th>
+                <th class="p-3 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody">
+              <!-- Renderizado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: HISTÓRICO, CANCELAMENTO E FECHAMENTO DE CAIXA -->
+    <section id="view-historico" class="view-panel hidden space-y-6">
+      
+      <!-- Resumo do Caixa Aberto -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-500 font-semibold uppercase">Total Faturado</span>
+          <p id="boxTotalSales" class="text-2xl font-black text-indigo-600 mt-1">R$ 0,00</p>
+          <span id="boxCountSales" class="text-xs text-slate-400">0 vendas concluídas</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-500 font-semibold uppercase">Dinheiro</span>
+          <p id="boxCashSales" class="text-xl font-bold text-slate-700 mt-1">R$ 0,00</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-500 font-semibold uppercase">PIX</span>
+          <p id="boxPixSales" class="text-xl font-bold text-slate-700 mt-1">R$ 0,00</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-500 font-semibold uppercase">Cartões (Déb./Créd.)</span>
+          <p id="boxCardSales" class="text-xl font-bold text-slate-700 mt-1">R$ 0,00</p>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold text-slate-800">Histórico de Transações</h2>
+        <button onclick="closeRegisterModal()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2">
+          <i class="ph ph-lock-key text-lg"></i> Fechar Caixa
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+              <tr>
+                <th class="p-3">ID Venda</th>
+                <th class="p-3">Data / Hora</th>
+                <th class="p-3">Itens</th>
+                <th class="p-3">Forma Pagto</th>
+                <th class="p-3">Total Líquido</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="salesTableBody">
+              <!-- Renderizado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: CONFIGURAÇÃO DA LOJA -->
+    <section id="view-config" class="view-panel hidden max-w-2xl mx-auto">
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Configuração & Personalização da Loja</h2>
+          <p class="text-xs text-slate-500">Personalize a identidade da loja ativa no momento.</p>
+        </div>
+
+        <form id="storeSettingsForm" onsubmit="saveStoreSettings(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nome Fantasia da Loja</label>
+            <input id="settingStoreName" type="text" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Segmento de Atuação</label>
+            <select id="settingStoreSegment" class="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="Moda">Moda</option>
+              <option value="Calçados">Calçados</option>
+              <option value="Cosméticos">Cosméticos</option>
+              <option value="Variedades">Variedades</option>
+              <option value="Comércio Geral">Comércio Geral</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">URL do Logotipo / Imagem (Opcional)</label>
+            <input id="settingStoreLogo" type="url" placeholder="https://exemplo.com/logo.png" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+
+          <div class="flex justify-end pt-3">
+            <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold">Salvar Configurações</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW: PAINEL MASTER ADM -->
+    <section id="view-master" class="view-panel hidden space-y-6">
+      <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="text-xs uppercase tracking-widest text-amber-400 font-bold">Acesso Administrativo Central</span>
+          <h2 class="text-2xl font-black mt-1">Painel Master ADM</h2>
+          <p class="text-xs text-slate-300 mt-1">Gerencie múltiplos lojistas e acompanhe o volume de vendas consolidado.</p>
+        </div>
+        <button onclick="openNewStoreModal()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-sm flex items-center gap-2 transition">
+          <i class="ph ph-plus-circle text-lg"></i> Criar Nova Loja
+        </button>
+      </div>
+
+      <!-- Resumo Geral da Rede de Lojas -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs uppercase font-semibold text-slate-500">Lojas Ativas</span>
+          <p id="masterStoreCount" class="text-3xl font-black text-slate-800 mt-1">0</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs uppercase font-semibold text-slate-500">Total Transacionado Global</span>
+          <p id="masterGlobalVolume" class="text-3xl font-black text-emerald-600 mt-1">R$ 0,00</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs uppercase font-semibold text-slate-500">Total de Pedidos</span>
+          <p id="masterTotalSalesCount" class="text-3xl font-black text-indigo-600 mt-1">0</p>
+        </div>
+      </div>
+
+      <!-- Tabela de Lojas Cadastradas -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+          <h3 class="font-bold text-slate-800">Lojas Gerenciadas</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+              <tr>
+                <th class="p-3">Loja</th>
+                <th class="p-3">Segmento</th>
+                <th class="p-3">Produtos</th>
+                <th class="p-3">Total Vendas</th>
+                <th class="p-3 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="masterStoreTableBody">
+              <!-- Renderizado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: FINALIZAR VENDA (PAGAMENTO E TROCO) -->
+  <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-150">
+      
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+        <h3 class="font-bold flex items-center gap-2">
+          <i class="ph ph-credit-card text-emerald-400 text-lg"></i> Pagamento & Conclusão
+        </h3>
+        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        
+        <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex justify-between items-center">
+          <span class="text-sm font-semibold text-indigo-900">Total a Pagar:</span>
+          <span id="modalPayableTotal" class="text-2xl font-black text-indigo-700">R$ 0,00</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-2">Selecione o Meio de Pagamento</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="selectPaymentMethod('pix')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center gap-1 transition" data-method="pix">
+              <i class="ph ph-qr-code text-2xl text-teal-600"></i>
+              <span class="text-xs font-bold">PIX</span>
+            </button>
+            <button type="button" onclick="selectPaymentMethod('dinheiro')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center gap-1 transition" data-method="dinheiro">
+              <i class="ph ph-money text-2xl text-emerald-600"></i>
+              <span class="text-xs font-bold">Dinheiro</span>
+            </button>
+            <button type="button" onclick="selectPaymentMethod('cartao')" class="pay-method-btn border-2 border-slate-200 hover:border-indigo-500 p-2.5 rounded-xl flex flex-col items-center gap-1 transition" data-method="cartao">
+              <i class="ph ph-credit-card text-2xl text-blue-600"></i>
+              <span class="text-xs font-bold">Cartão</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Painel Específico: Dinheiro (Cálculo de Troco) -->
+        <div id="cashPanel" class="hidden space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Recebido em Dinheiro (R$)</label>
+            <input id="cashReceivedInput" type="number" step="0.5" placeholder="0,00" oninput="calculateChange()" class="w-full px-3 py-2 border rounded-lg text-base font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
+          </div>
+          <div class="flex justify-between items-center pt-1 text-sm">
+            <span class="font-semibold text-slate-600">Troco:</span>
+            <span id="cashChangeDisplay" class="text-lg font-black text-emerald-600">R$ 0,00</span>
+          </div>
+        </div>
+
+        <!-- Painel Específico: PIX Mock -->
+        <div id="pixPanel" class="hidden text-center p-3 bg-teal-50 rounded-xl border border-teal-200">
+          <i class="ph ph-check-circle text-3xl text-teal-600"></i>
+          <p class="text-xs text-teal-800 font-medium mt-1">Aproxime o QR Code ou confirme o recebimento do PIX no comprovante.</p>
+        </div>
+
+        <button onclick="confirmSale()" id="confirmSaleBtn" disabled class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-md transition">
+          Confirmar e Concluir Venda
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: LÓGICA E DADOS -->
+  <script>
+    // --- ESTRUTURA INICIAL & BANCO DE DADOS LOCAL ---
+    const DEFAULT_STORES = [
+      {
+        id: "store_1",
+        name: "Boutique Elegance",
+        segment: "Moda",
+        logo: "",
+        products: [
+          { id: "p1", name: "Camiseta Oversized Algodão", barcode: "7891001", price: 79.90 },
+          { id: "p2", name: "Calça Jeans Slim", barcode: "7891002", price: 159.00 },
+          { id: "p3", name: "Vestido Midi Floral", barcode: "7891003", price: 189.90 },
+          { id: "p4", name: "Jaqueta Couro Ecológico", barcode: "7891004", price: 289.00 }
+        ],
+        sales: []
+      }
+    ];
+
+    // Carregar estado persistido
+    let stores = JSON.parse(localStorage.getItem('app_stores')) || DEFAULT_STORES;
+    let currentStoreId = localStorage.getItem('app_current_store') || stores[0].id;
+    let cart = [];
+    let appliedDiscount = { type: 'fixed', value: 0 };
+    let selectedPayment = null;
+
+    function saveState() {
+      localStorage.setItem('app_stores', JSON.stringify(stores));
+      localStorage.setItem('app_current_store', currentStoreId);
+    }
+
+    function getCurrentStore() {
+      return stores.find(s => s.id === currentStoreId) || stores[0];
+    }
+
+    // --- FORMATAÇÃO MONETÁRIA ---
+    function formatBRL(val) {
+      return (Number(val) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // --- RENDERIZAÇÃO DA IDENTIDADE VISUAL ---
+    function renderStoreHeader() {
+      const store = getCurrentStore();
+      document.getElementById('shopNameDisplay').innerText = store.name;
+      document.getElementById('shopSegmentDisplay').innerText = store.segment;
+
+      const img = document.getElementById('shopLogoImg');
+      const fallback = document.getElementById('shopLogoFallback');
+
+      if (store.logo && store.logo.trim() !== '') {
+        img.src = store.logo;
+        img.classList.remove('hidden');
+        fallback.classList.add('hidden');
+      } else {
+        img.classList.add('hidden');
+        fallback.classList.remove('hidden');
+      }
+    }
+
+    // --- RENDER DO CATÁLOGO DE PRODUTOS NO PDV ---
+    function renderPdvProducts(filter = '') {
+      const store = getCurrentStore();
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
+
+      const filtered = store.products.filter(p => 
+        p.name.toLowerCase().includes(filter.toLowerCase()) || 
+        p.barcode.includes(filter)
+      );
+
+      document.getElementById('productCounterBadge').innerText = `${filtered.length} itens`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-sm">Nenhum produto localizado.</div>`;
+        return;
+      }
+
+      filtered.forEach(p => {
+        const card = document.createElement('div');
+        card.className = "p-3 border border-slate-200 rounded-xl hover:border-indigo-500 hover:shadow-sm transition bg-white flex flex-col justify-between cursor-pointer group";
+        card.onclick = () => addToCart(p);
+        card.innerHTML = `
+          <div>
+            <span class="text-[10px] text-slate-400 font-mono block">Cód: ${p.barcode}</span>
+            <h4 class="font-bold text-xs text-slate-700 group-hover:text-indigo-600 line-clamp-2 mt-0.5">${p.name}</h4>
+          </div>
+          <div class="mt-2 flex justify-between items-center">
+            <span class="font-black text-sm text-slate-900">${formatBRL(p.price)}</span>
+            <span class="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-slate-600 text-xs transition">
+              <i class="ph ph-plus font-bold"></i>
+            </span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // --- LÓGICA DO CARRINHO (FRENTE DE CAIXA) ---
+    function addToCart(product) {
+      const existing = cart.find(item => item.product.id === product.id);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ product, qty: 1 });
+      }
+      renderCart();
+    }
+
+    function changeCartQty(index, delta) {
+      if (!cart[index]) return;
+      cart[index].qty += delta;
+      if (cart[index].qty <= 0) {
+        cart.splice(index, 1);
+      }
+      renderCart();
+    }
+
+    function removeCartItem(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    function clearCart() {
+      cart = [];
+      appliedDiscount = { type: 'fixed', value: 0 };
+      document.getElementById('discountValue').value = '';
+      renderCart();
+    }
+
+    function calculateCartTotals() {
+      const subtotal = cart.reduce((acc, item) => acc + (item.product.price * item.qty), 0);
+      let discountAmount = 0;
+
+      if (appliedDiscount.type === 'percent') {
+        discountAmount = (subtotal * appliedDiscount.value) / 100;
+      } else {
+        discountAmount = appliedDiscount.value;
+      }
+
+      if (discountAmount > subtotal) discountAmount = subtotal;
+      const total = Math.max(0, subtotal - discountAmount);
+
+      return { subtotal, discountAmount, total };
+    }
+
+    function applyDiscount() {
+      const val = parseFloat(document.getElementById('discountValue').value) || 0;
+      const type = document.getElementById('discountType').value;
+      appliedDiscount = { type, value: Math.max(0, val) };
+      renderCart();
+    }
+
+    function renderCart() {
+      const list = document.getElementById('cartItemsList');
+      list.innerHTML = '';
+
+      if (cart.length === 0) {
+        list.innerHTML = `
+          <div class="h-48 flex flex-col items-center justify-center text-slate-300">
+            <i class="ph ph-shopping-bag-open text-4xl mb-1"></i>
+            <span class="text-xs">O caixa está vazio</span>
+          </div>
+        `;
+        document.getElementById('finishSaleBtn').disabled = true;
+      } else {
+        document.getElementById('finishSaleBtn').disabled = false;
+        cart.forEach((item, index) => {
+          const itemTotal = item.product.price * item.qty;
+          const row = document.createElement('div');
+          row.className = "flex items-center justify-between gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs";
+          row.innerHTML = `
+            <div class="flex-1 truncate">
+              <span class="font-bold text-slate-800 block truncate">${item.product.name}</span>
+              <span class="text-slate-500 font-medium">${formatBRL(item.product.price)} un.</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="changeCartQty(${index}, -1)" class="w-6 h-6 rounded bg-white border border-slate-300 hover:bg-slate-100 font-bold text-slate-700 flex items-center justify-center">-</button>
+              <span class="w-5 text-center font-bold text-slate-800">${item.qty}</span>
+              <button onclick="changeCartQty(${index}, 1)" class="w-6 h-6 rounded bg-white border border-slate-300 hover:bg-slate-100 font-bold text-slate-700 flex items-center justify-center">+</button>
+            </div>
+            <div class="text-right w-16">
+              <span class="font-bold text-slate-800 block">${formatBRL(itemTotal)}</span>
+              <button onclick="removeCartItem(${index})" class="text-[10px] text-rose-500 hover:underline">Remover</button>
+            </div>
+          `;
+          list.appendChild(row);
+        });
+      }
+
+      const totals = calculateCartTotals();
+      document.getElementById('subtotalDisplay').innerText = formatBRL(totals.subtotal);
+      document.getElementById('totalDisplay').innerText = formatBRL(totals.total);
+    }
+
+    // --- SUPORTE A LEITOR DE CÓDIGO DE BARRAS / BUSCA ---
+    const searchInput = document.getElementById('barcodeSearchInput');
+    searchInput.addEventListener('input', (e) => {
+      renderPdvProducts(e.target.value);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const query = searchInput.value.trim();
+        if (!query) return;
+
+        const store = getCurrentStore();
+        // Procura código de barras exato
+        const exactMatch = store.products.find(p => p.barcode === query);
+        if (exactMatch) {
+          addToCart(exactMatch);
+          searchInput.value = '';
+          renderPdvProducts();
+        } else {
+          // Se for uma busca comum, pega o primeiro retornado
+          const matches = store.products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
+          if (matches.length > 0) {
+            addToCart(matches[0]);
+            searchInput.value = '';
+            renderPdvProducts();
+          }
+        }
+      }
+    });
+
+    // --- MODAL DE PAGAMENTO & TROCO ---
+    function openPaymentModal() {
+      if (cart.length === 0) return;
+      const { total } = calculateCartTotals();
+      document.getElementById('modalPayableTotal').innerText = formatBRL(total);
+      document.getElementById('paymentModal').classList.remove('hidden');
+      selectPaymentMethod('pix'); // Padrão
+    }
+
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.add('hidden');
+    }
+
+    function selectPaymentMethod(method) {
+      selectedPayment = method;
+      document.querySelectorAll('.pay-method-btn').forEach(b => {
+        if (b.dataset.method === method) {
+          b.classList.add('border-indigo-600', 'bg-indigo-50/50');
+        } else {
+          b.classList.remove('border-indigo-600', 'bg-indigo-50/50');
+        }
+      });
+
+      const cashPanel = document.getElementById('cashPanel');
+      const pixPanel = document.getElementById('pixPanel');
+
+      cashPanel.classList.toggle('hidden', method !== 'dinheiro');
+      pixPanel.classList.toggle('hidden', method !== 'pix');
+
+      const confirmBtn = document.getElementById('confirmSaleBtn');
+
+      if (method === 'dinheiro') {
+        calculateChange();
+      } else {
+        confirmBtn.disabled = false;
+      }
+    }
+
+    function calculateChange() {
+      const { total } = calculateCartTotals();
+      const received = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
+      const change = received - total;
+
+      const changeDisplay = document.getElementById('cashChangeDisplay');
+      const confirmBtn = document.getElementById('confirmSaleBtn');
+
+      if (received >= total && total > 0) {
+        changeDisplay.innerText = formatBRL(change);
+        changeDisplay.classList.remove('text-rose-500');
+        changeDisplay.classList.add('text-emerald-600');
+        confirmBtn.disabled = false;
+      } else {
+        changeDisplay.innerText = "Valor insuficiente";
+        changeDisplay.classList.remove('text-emerald-600');
+        changeDisplay.classList.add('text-rose-500');
+        confirmBtn.disabled = true;
+      }
+    }
+
+    function confirmSale() {
+      if (!selectedPayment || cart.length === 0) return;
+      const store = getCurrentStore();
+      const totals = calculateCartTotals();
+
+      const sale = {
+        id: "VND-" + Math.floor(100000 + Math.random() * 900000),
+        timestamp: new Date().toISOString(),
+        items: [...cart],
+        subtotal: totals.subtotal,
+        discount: totals.discountAmount,
+        total: totals.total,
+        paymentMethod: selectedPayment,
+        status: 'Concluída'
+      };
+
+      store.sales.unshift(sale);
+      saveState();
+
+      clearCart();
+      closePaymentModal();
+      alert(`Venda ${sale.id} realizada com sucesso!`);
+      renderSalesHistory();
+    }
+
+    // --- HISTÓRICO DE VENDAS & FECHAMENTO DE CAIXA ---
+    function renderSalesHistory() {
+      const store = getCurrentStore();
+      const tbody = document.getElementById('salesTableBody');
+      tbody.innerHTML = '';
+
+      let totalFaturado = 0;
+      let count = 0;
+      let cashTotal = 0;
+      let pixTotal = 0;
+      let cardTotal = 0;
+
+      store.sales.forEach(sale => {
+        if (sale.status === 'Concluída') {
+          totalFaturado += sale.total;
+          count += 1;
+          if (sale.paymentMethod === 'dinheiro') cashTotal += sale.total;
+          if (sale.paymentMethod === 'pix') pixTotal += sale.total;
+          if (sale.paymentMethod === 'cartao') cardTotal += sale.total;
+        }
+
+        const dateStr = new Date(sale.timestamp).toLocaleString('pt-BR');
+        const itemsSummary = sale.items.map(i => `${i.qty}x ${i.product.name}`).join(', ');
+
+        const tr = document.createElement('tr');
+        tr.className = "border-b hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3 font-mono font-bold text-xs">${sale.id}</td>
+          <td class="p-3 text-xs">${dateStr}</td>
+          <td class="p-3 max-w-xs truncate text-xs" title="${itemsSummary}">${itemsSummary}</td>
+          <td class="p-3 uppercase text-xs font-semibold">${sale.paymentMethod}</td>
+          <td class="p-3 font-bold text-slate-800">${formatBRL(sale.total)}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${sale.status === 'Concluída' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+              ${sale.status}
+            </span>
+          </td>
+          <td class="p-3 text-right">
+            ${sale.status === 'Concluída' ? 
+              `<button onclick="cancelSale('${sale.id}')" class="text-xs text-rose-600 hover:text-rose-800 font-bold">Cancelar</button>` : 
+              `<span class="text-xs text-slate-400">Cancelada</span>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('boxTotalSales').innerText = formatBRL(totalFaturado);
+      document.getElementById('boxCountSales').innerText = `${count} vendas válidas`;
+      document.getElementById('boxCashSales').innerText = formatBRL(cashTotal);
+      document.getElementById('boxPixSales').innerText = formatBRL(pixTotal);
+      document.getElementById('boxCardSales').innerText = formatBRL(cardTotal);
+    }
+
+    function cancelSale(saleId) {
+      if (!confirm(`Deseja realmente cancelar a venda ${saleId}? O valor será deduzido do caixa.`)) return;
+      const store = getCurrentStore();
+      const sale = store.sales.find(s => s.id === saleId);
+      if (sale) {
+        sale.status = 'Cancelada';
+        saveState();
+        renderSalesHistory();
+      }
+    }
+
+    function closeRegisterModal() {
+      const store = getCurrentStore();
+      const total = store.sales.filter(s => s.status === 'Concluída').reduce((acc, s) => acc + s.total, 0);
+      
+      const confirmClose = confirm(
+        `RELATÓRIO DE FECHAMENTO DE CAIXA:\n` +
+        `Loja: ${store.name}\n` +
+        `Total Vendas Ativas: ${formatBRL(total)}\n\n` +
+        `Deseja fechar o caixa e arquivar as transações deste turno?`
+      );
+
+      if (confirmClose) {
+        store.sales = [];
+        saveState();
+        renderSalesHistory();
+        alert("Caixa fechado com sucesso. Pronto para a próxima abertura!");
+      }
+    }
+
+    // --- CADASTRO E GESTÃO DE PRODUTOS ---
+    function renderProductsTable() {
+      const store = getCurrentStore();
+      const tbody = document.getElementById('productsTableBody');
+      tbody.innerHTML = '';
+
+      store.products.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = "border-b hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3 font-mono text-xs">${p.barcode}</td>
+          <td class="p-3 font-bold text-slate-800">${p.name}</td>
+          <td class="p-3">${formatBRL(p.price)}</td>
+          <td class="p-3 text-right space-x-2">
+            <button onclick="editProduct('${p.id}')" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">Editar</button>
+            <button onclick="deleteProduct('${p.id}')" class="text-xs text-rose-600 hover:text-rose-800 font-semibold">Excluir</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleProductSubmit(e) {
+      e.preventDefault();
+      const store = getCurrentStore();
+      const editId = document.getElementById('prodEditId').value;
+      const name = document.getElementById('prodName').value.trim();
+      const barcode = document.getElementById('prodBarcode').value.trim();
+      const price = parseFloat(document.getElementById('prodPrice').value);
+
+      if (editId) {
+        const prod = store.products.find(p => p.id === editId);
+        if (prod) {
+          prod.name = name;
+          prod.barcode = barcode;
+          prod.price = price;
+        }
+      } else {
+        store.products.push({
+          id: "prod_" + Date.now(),
+          name,
+          barcode,
+          price
+        });
+      }
+
+      saveState();
+      resetProductForm();
+      renderProductsTable();
+      renderPdvProducts();
+    }
+
+    function editProduct(id) {
+      const store = getCurrentStore();
+      const prod = store.products.find(p => p.id === id);
+      if (!prod) return;
+
+      document.getElementById('prodEditId').value = prod.id;
+      document.getElementById('prodName').value = prod.name;
+      document.getElementById('prodBarcode').value = prod.barcode;
+      document.getElementById('prodPrice').value = prod.price;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteProduct(id) {
+      if (!confirm("Remover este produto do catálogo?")) return;
+      const store = getCurrentStore();
+      store.products = store.products.filter(p => p.id !== id);
+      saveState();
+      renderProductsTable();
+      renderPdvProducts();
+    }
+
+    function resetProductForm() {
+      document.getElementById('productForm').reset();
+      document.getElementById('prodEditId').value = '';
+    }
+
+    // --- CONFIGURAÇÃO DA LOJA (PERSONALIZAÇÃO) ---
+    function loadStoreSettings() {
+      const store = getCurrentStore();
+      document.getElementById('settingStoreName').value = store.name;
+      document.getElementById('settingStoreSegment').value = store.segment;
+      document.getElementById('settingStoreLogo').value = store.logo || '';
+    }
+
+    function saveStoreSettings(e) {
+      e.preventDefault();
+      const store = getCurrentStore();
+      store.name = document.getElementById('settingStoreName').value.trim();
+      store.segment = document.getElementById('settingStoreSegment').value;
+      store.logo = document.getElementById('settingStoreLogo').value.trim();
+
+      saveState();
+      renderStoreHeader();
+      alert("Configurações da loja atualizadas com sucesso!");
+    }
+
+    // --- PAINEL MASTER ADM GERAL ---
+    function renderMasterDashboard() {
+      document.getElementById('masterStoreCount').innerText = stores.length;
+
+      let globalVolume = 0;
+      let totalSalesCount = 0;
+
+      const tbody = document.getElementById('masterStoreTableBody');
+      tbody.innerHTML = '';
+
+      stores.forEach(s => {
+        const storeTotal = s.sales.filter(v => v.status === 'Concluída').reduce((acc, v) => acc + v.total, 0);
+        globalVolume += storeTotal;
+        totalSalesCount += s.sales.filter(v => v.status === 'Concluída').length;
+
+        const isCurrent = s.id === currentStoreId;
+
+        const tr = document.createElement('tr');
+        tr.className = "border-b hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3">
+            <span class="font-bold text-slate-800">${s.name}</span>
+            ${isCurrent ? '<span class="ml-2 text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">Ativa</span>' : ''}
+          </td>
+          <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${s.segment}</span></td>
+          <td class="p-3 text-xs font-semibold">${s.products.length} itens</td>
+          <td class="p-3 font-bold text-emerald-600">${formatBRL(storeTotal)}</td>
+          <td class="p-3 text-right">
+            ${!isCurrent ? 
+              `<button onclick="switchToStore('${s.id}')" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold">Acessar Loja</button>` : 
+              `<span class="text-xs text-slate-400">Em operação</span>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('masterGlobalVolume').innerText = formatBRL(globalVolume);
+      document.getElementById('masterTotalSalesCount').innerText = totalSalesCount;
+    }
+
+    function switchToStore(storeId) {
+      currentStoreId = storeId;
+      saveState();
+      initApp();
+      switchView('pdv');
+    }
+
+    function openNewStoreModal() {
+      const name = prompt("Nome da nova loja:");
+      if (!name) return;
+      const segment = prompt("Segmento (Moda, Calçados, Cosméticos, Variedades ou Comércio Geral):", "Comércio Geral");
+
+      const newStore = {
+        id: "store_" + Date.now(),
+        name: name.trim(),
+        segment: segment || "Comércio Geral",
+        logo: "",
+        products: [],
+        sales: []
+      };
+
+      stores.push(newStore);
+      currentStoreId = newStore.id;
+      saveState();
+      initApp();
+      renderMasterDashboard();
+      alert(`Loja "${name}" criada com sucesso!`);
+    }
+
+    // --- CONTROLE DE TELAS (ROTEAMENTO INTERNO) ---
+    function switchView(viewName) {
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`view-${viewName}`).classList.remove('hidden');
+
+      // Atualiza botões
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        if (!btn.classList.contains('bg-amber-500/20')) {
+          btn.classList.add('text-slate-300');
+        }
+      });
+
+      if (viewName === 'pdv') {
+        renderPdvProducts();
+        setTimeout(() => document.getElementById('barcodeSearchInput').focus(), 100);
+      } else if (viewName === 'produtos') {
+        renderProductsTable();
+      } else if (viewName === 'historico') {
+        renderSalesHistory();
+      } else if (viewName === 'config') {
+        loadStoreSettings();
+      } else if (viewName === 'master') {
+        renderMasterDashboard();
+      }
+    }
+
+    // Atalhos de teclado comuns em PDV
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        openPaymentModal();
+      }
+      if (e.key === 'Escape') {
+        closePaymentModal();
+      }
+    });
+
+    // --- INICIALIZAÇÃO GERAL ---
+    function initApp() {
+      renderStoreHeader();
+      renderPdvProducts();
+      renderCart();
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
